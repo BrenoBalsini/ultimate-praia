@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA4roFEEmkCsIyYgtkvNXpyDdi-VLzuuAQ",
-  authDomain: "ultimate-praia.firebaseapp.com",
-  projectId: "ultimate-praia",
-  storageBucket: "ultimate-praia.firebasestorage.app",
-  messagingSenderId: "587532969770",
-  appId: "1:587532969770:web:7b0b0a658b87ee2a046053",
-  measurementId: "G-D3R8BWZMH6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
