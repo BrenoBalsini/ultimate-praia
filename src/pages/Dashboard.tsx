@@ -10,6 +10,12 @@ interface DashboardCard {
 }
 
 const cards: DashboardCard[] = [
+    {
+    title: '👥 Guarda-Vidas',
+    description: 'Gerenciar guarda-vidas do sistema',
+    icon: '👥',
+    route: '/gvcs',
+  },
   {
     title: '📍 Postos e Materiais',
     description: 'Gerenciar materiais nos postos (guarda-sóis, rádios, etc)',
