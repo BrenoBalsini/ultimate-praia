@@ -1,14 +1,4 @@
 import React, { useMemo } from 'react';
-import {
-  Box,
-  Button,
-  HStack,
-  Input,
-  Stack,
-  Text,
-  VStack,
-  Badge,
-} from '@chakra-ui/react';
 import { type GVC } from '../../services/gvcService';
 
 interface ListaGVCTableProps {
@@ -47,141 +37,125 @@ export const ListaGVCTable = ({
     }
   }, [gvcsFiltrados, sortBy]);
 
-  const getStatusColor = (status: string) => {
-    return status === 'ativo' ? 'green' : 'gray';
-  };
+ return (
+  <div className="flex flex-col gap-4">
+    {/* Controles de Filtro e Ordenação */}
+    <div className="flex flex-col md:flex-row gap-4">
+      <input
+        placeholder="Buscar por nome..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      />
 
-  return (
-    <VStack gap={4} align="stretch">
-      {/* Controles de Filtro e Ordenação */}
-      <Stack direction={{ base: 'column', md: 'row' }} gap={4}>
-        <Input
-          placeholder="Buscar por nome..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          flex={1}
-        />
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold">Ordenar:</span>
+        <select
+          className="px-2 py-2 rounded-md border border-gray-200 text-sm"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortBy)}
+        >
+          <option value="posicao">Por Posição</option>
+          <option value="alfabetica">Alfabética</option>
+        </select>
+      </div>
+    </div>
 
-        <HStack>
-          <Text fontSize="sm" fontWeight="bold">
-            Ordenar:
-          </Text>
-          <select
-            style={{
-              padding: '0.5rem',
-              borderRadius: '0.375rem',
-              border: '1px solid #e5e7eb',
-              fontSize: '14px',
-            }}
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortBy)}
-          >
-            <option value="posicao">Por Posição</option>
-            <option value="alfabetica">Alfabética</option>
-          </select>
-        </HStack>
-      </Stack>
+    {/* Tabela */}
+    {gvcsOrdenados.length > 0 ? (
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border-b border-gray-200">
+              <th className="px-3 py-3 text-center font-bold w-20">
+                Posição
+              </th>
+              <th className="px-3 py-3 text-left font-bold">
+                Nome
+              </th>
+              <th className="px-3 py-3 text-left font-bold">
+                Status
+              </th>
+              <th className="px-3 py-3 text-center font-bold">
+                Ações
+              </th>
+            </tr>
+          </thead>
 
-      {/* Tabela */}
-      {gvcsOrdenados.length > 0 ? (
-        <Box overflowX="auto" borderWidth="1px" borderRadius="lg">
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-                <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', width: '80px' }}>
-                  Posição
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>
-                  Nome
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>
-                  Status
-                </th>
-                <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                  Ações
-                </th>
+          <tbody>
+            {gvcsOrdenados.map((gvc) => (
+              <tr
+                key={gvc.id}
+                className="border-b border-gray-200 bg-white hover:bg-gray-50"
+              >
+                <td className="px-3 py-3 text-center font-bold text-base">
+                  {gvc.posicao}º
+                </td>
+                <td className="px-3 py-3 font-medium">
+                  {gvc.nome}
+                </td>
+                <td className="px-3 py-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      gvc.status === "ativo"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {gvc.status === "ativo" ? "✓ Ativo" : "✗ Inativo"}
+                  </span>
+                </td>
+                <td className="px-3 py-3">
+                  <div className="flex justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(gvc)}
+                      className="px-2 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onToggleStatus(gvc)}
+                      className={`px-2 py-1 text-sm rounded-md transition-colors ${
+                        gvc.status === "ativo"
+                          ? "text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          : "text-green-600 hover:text-green-700 hover:bg-green-50"
+                      }`}
+                    >
+                      {gvc.status === "ativo" ? "Desativar" : "Ativar"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onDelete(gvc)}
+                      className="px-2 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      Deletar
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="text-center py-8">
+        <p className="text-gray-500">
+          {searchTerm
+            ? "Nenhum GVC encontrado com esse nome"
+            : "Nenhum GVC cadastrado ainda"}
+        </p>
+      </div>
+    )}
 
-            <tbody>
-              {gvcsOrdenados.map((gvc) => (
-                <tr
-                  key={gvc.id}
-                  style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    backgroundColor: 'white',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
-                >
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: '700', fontSize: '16px' }}>
-                    {gvc.posicao}º
-                  </td>
-                  <td style={{ padding: '12px', fontWeight: '500' }}>
-                    {gvc.nome}
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <Badge colorPalette={getStatusColor(gvc.status)}>
-                      {gvc.status === 'ativo' ? '✓ Ativo' : '✗ Inativo'}
-                    </Badge>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <HStack justifyContent="center" gap={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        variant="ghost"
-                        onClick={() => onEdit(gvc)}
-                      >
-                        Editar
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        colorScheme={
-                          gvc.status === 'ativo' ? 'orange' : 'green'
-                        }
-                        variant="ghost"
-                        onClick={() => onToggleStatus(gvc)}
-                      >
-                        {gvc.status === 'ativo' ? 'Desativar' : 'Ativar'}
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        variant="ghost"
-                        onClick={() => onDelete(gvc)}
-                      >
-                        Deletar
-                      </Button>
-                    </HStack>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Box>
-      ) : (
-        <Box textAlign="center" py={8}>
-          <Text color="gray.500">
-            {searchTerm
-              ? 'Nenhum GVC encontrado com esse nome'
-              : 'Nenhum GVC cadastrado ainda'}
-          </Text>
-        </Box>
-      )}
-
-      {/* Resumo */}
-      <Text fontSize="sm" color="gray.600">
-        Total: <strong>{gvcsOrdenados.length}</strong> GVCs
-        {searchTerm && ` (filtrados de ${gvcs.length})`}
-      </Text>
-    </VStack>
-  );
+    {/* Resumo */}
+    <p className="text-sm text-gray-600">
+      Total: <strong>{gvcsOrdenados.length}</strong> GVCs
+      {searchTerm && ` (filtrados de ${gvcs.length})`}
+    </p>
+  </div>
+);
 };

@@ -1,8 +1,7 @@
-import { Box, Button, Flex, Heading, HStack } from '@chakra-ui/react';
-import { logout } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { toaster } from './ui/toasterExport';
+import { logout } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+
 
 export const Navbar = () => {
   const { user } = useAuth();
@@ -11,43 +10,29 @@ export const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
-      toaster.create({
-        title: 'Desconectado com sucesso',
-        type: 'success',
-        duration: 2000,
-      });
+      navigate("/login");
     } catch (error) {
-      console.error('Erro ao desconectar:', error);
-      toaster.create({
-        title: 'Erro ao desconectar',
-        type: 'error',
-        duration: 3000,
-      });
+      console.error("Erro ao desconectar:", error);
     }
   };
 
   return (
-    <Box bg="blue.600" px={6} py={4} boxShadow="md">
-      <Flex justify="space-between" align="center">
-        <Heading size="md" color="white">
-          🏖️ Gestão de Praia
-        </Heading>
+    <div className="bg-blue-600 px-6 py-4 shadow-md">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-white">🏖️ Gestão de Praia</h2>
 
-        <HStack gap={4}>
-          <Box color="white" fontSize="sm">
+        <div className="flex items-center gap-4">
+          <div className="text-white text-sm">
             {user?.displayName || user?.email}
-          </Box>
-          <Button
-            size="sm"
-            colorScheme="red"
-            variant="solid"
+          </div>
+          <button
+            className="px-4 py-1.5 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-blue-600 text-sm transition-colors"
             onClick={handleLogout}
           >
             Sair
-          </Button>
-        </HStack>
-      </Flex>
-    </Box>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };

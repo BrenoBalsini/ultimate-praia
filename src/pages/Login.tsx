@@ -1,9 +1,7 @@
-import { Box, Button, Heading, Text, VStack, Image } from '@chakra-ui/react';
 import { signInWithGoogle } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { toaster } from '../components/ui/toasterExport';
 
 export const Login = () => {
   const { user } = useAuth();
@@ -18,69 +16,44 @@ export const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       await signInWithGoogle();
-      toaster.create({
-        title: 'Login realizado com sucesso!',
-        type: 'success',
-        duration: 3000,
-      });
+
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      toaster.create({
-        title: 'Erro ao fazer login',
-        description: 'Tente novamente mais tarde',
-        type: 'error',
-        duration: 5000,
-      });
+      
     }
   };
 
-  return (
-    <Box
-      minH="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="gray.50"
-      px={4}
-    >
-      <Box
-        maxW="md"
-        w="full"
-        bg="white"
-        boxShadow="lg"
-        rounded="lg"
-        p={8}
-      >
-        <VStack gap={6}>
-          <Box textAlign="center">
-            <Heading size="xl" mb={2}>
-              Gerenciamento de Praia
-            </Heading>
-            <Text color="gray.600">
-              Sistema para Bombeiros Militares
-            </Text>
-          </Box>
+return (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-8">
+      <div className="flex flex-col items-center gap-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-2">
+            Gerenciamento de Praia
+          </h1>
+          <p className="text-gray-600">
+            Sistema para Bombeiros Militares
+          </p>
+        </div>
 
-          <Button
-            w="full"
-            size="lg"
-            onClick={handleGoogleLogin}
-            colorScheme="blue"
-          >
-            <Image
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              boxSize="20px"
-              mr={2}
-            />
-            Entrar com Google
-          </Button>
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Entrar com Google
+        </button>
 
-          <Text fontSize="sm" color="gray.500" textAlign="center">
-            Faça login com sua conta do Google para acessar o sistema
-          </Text>
-        </VStack>
-      </Box>
-    </Box>
-  );
+        <p className="text-sm text-gray-500 text-center">
+          Faça login com sua conta do Google para acessar o sistema
+        </p>
+      </div>
+    </div>
+  </div>
+);
 };

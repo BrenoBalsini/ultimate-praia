@@ -1,4 +1,3 @@
-import { Box, Heading, SimpleGrid, Text, VStack } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 
@@ -57,51 +56,43 @@ const cards: DashboardCard[] = [
 export const Dashboard = () => {
   const navigate = useNavigate();
 
-  return (
-    <Box minH="100vh" bg="gray.50">
-      <Navbar />
+ return (
+  <div className="min-h-screen bg-gray-50">
+    <Navbar />
 
-      <Box px={6} py={8} maxW="1200px" mx="auto">
-        <VStack align="start" gap={8}>
-          <Box>
-            <Heading size="lg" mb={2}>
-              Bem-vindo ao Sistema de Gestão
-            </Heading>
-            <Text color="gray.600">
-              Selecione uma funcionalidade abaixo para começar
-            </Text>
-          </Box>
+    <div className="px-6 py-8 max-w-5xl mx-auto">
+      <div className="flex flex-col items-start gap-8">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">
+            Bem-vindo ao Sistema de Gestão
+          </h1>
+          <p className="text-gray-600">
+            Selecione uma funcionalidade abaixo para começar
+          </p>
+        </div>
 
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6} w="full">
-            {cards.map((card) => (
-              <Box
-                key={card.route}
-                bg="white"
-                p={6}
-                rounded="lg"
-                boxShadow="md"
-                cursor="pointer"
-                transition="all 0.3s"
-                _hover={{
-                  boxShadow: 'lg',
-                  transform: 'translateY(-4px)',
-                }}
-                onClick={() => navigate(card.route)}
-              >
-                <Text fontSize="3xl" mb={2}>
-                  {card.icon}
-                </Text>
-                <Heading size="sm" mb={2}>
-                  {card.title}
-                </Heading>
-                <Text color="gray.600" fontSize="sm">
-                  {card.description}
-                </Text>
-              </Box>
-            ))}
-          </SimpleGrid>
-        </VStack>
-      </Box>
-    </Box>
-  );
+        <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cards.map((card) => (
+            <button
+              key={card.route}
+              type="button"
+              onClick={() => navigate(card.route)}
+              className="bg-white p-6 rounded-lg shadow-md cursor-pointer transition-transform transition-shadow duration-300 hover:shadow-lg hover:-translate-y-1 text-left"
+            >
+              <div className="text-3xl mb-2">
+                {card.icon}
+              </div>
+              <h2 className="text-sm font-semibold mb-2">
+                {card.title}
+              </h2>
+              <p className="text-gray-600 text-sm">
+                {card.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 };

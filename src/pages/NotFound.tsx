@@ -1,29 +1,24 @@
-import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react';
+
 import { useNavigate } from 'react-router-dom';
 
 export const NotFound = () => {
   const navigate = useNavigate();
 
-  return (
-    <Box
-      minH="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="gray.50"
-    >
-      <VStack gap={6} textAlign="center">
-        <Heading size="2xl">404</Heading>
-        <Text fontSize="lg" color="gray.600">
-          Página não encontrada
-        </Text>
-        <Button
-          colorScheme="blue"
-          onClick={() => navigate('/dashboard')}
-        >
-          Voltar ao Dashboard
-        </Button>
-      </VStack>
-    </Box>
-  );
+ return (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex flex-col items-center gap-6 text-center">
+      <h1 className="text-5xl font-bold">404</h1>
+      <p className="text-lg text-gray-600">
+        Página não encontrada
+      </p>
+      <button
+        type="button"
+        onClick={() => navigate("/dashboard")}
+        className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+      >
+        Voltar ao Dashboard
+      </button>
+    </div>
+  </div>
+);
 };

@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Box, Spinner } from '@chakra-ui/react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,17 +9,17 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <Box display="flex" alignItems="center" justifyContent="center" minH="100vh">
-        <Spinner size="lg" />
-      </Box>
-    );
-  }
+if (loading) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+if (!user) {
+  return <Navigate to="/login" replace />;
+}
 
-  return <>{children}</>;
+return <>{children}</>;
 };

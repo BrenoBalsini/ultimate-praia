@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "@chakra-ui/react";
 import {
   type GVC,
   obterProximaPosicao,
   posicaoJaExiste,
 } from "../../services/gvcService";
-import { toaster } from "../ui/toasterExport";
 
 interface FormGVCProps {
   isOpen: boolean;
@@ -73,35 +71,18 @@ export const FormGVC = ({
 
   const handleSubmit = async () => {
     if (!formData.nome.trim()) {
-      toaster.create({
-        title: "Preencha o nome",
-        type: "error",
-        duration: 3000,
-      });
       return;
     }
 
     const posicaoExiste = await posicaoJaExiste(formData.posicao);
     if (!isEditing && posicaoExiste) {
-      toaster.create({
-        title: `Posição ${formData.posicao} já existe!`,
-        type: "error",
-        duration: 3000,
-      });
+
       return;
     }
 
     setIsLoading(true);
     try {
       await onSubmit(formData);
-
-      toaster.create({
-        title: isEditing
-          ? "GVC atualizado com sucesso"
-          : "GVC criado com sucesso",
-        type: "success",
-        duration: 2000,
-      });
 
       if (!isEditing && permitirCadastroEmLote) {
         setFormData((prev) => ({
@@ -115,11 +96,7 @@ export const FormGVC = ({
       }
     } catch (error) {
       console.error("Erro ao salvar GVC:", error);
-      toaster.create({
-        title: "Erro ao salvar GVC",
-        type: "error",
-        duration: 3000,
-      });
+
     } finally {
       setIsLoading(false);
     }
@@ -128,244 +105,128 @@ export const FormGVC = ({
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Backdrop escuro */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          zIndex: 40,
-        }}
-        onClick={onClose}
-      ></div>
+<>
+  {/* Backdrop escuro */}
+  <div
+    className="fixed inset-0 bg-black/50 z-40"
+    onClick={onClose}
+  />
 
-      {/* Modal centralizado */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 50,
-          padding: "1rem",
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "0.5rem",
-            boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
-            width: "100%",
-            maxWidth: "28rem",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            pointerEvents: "auto",
-          }}
-          onClick={(e) => e.stopPropagation()}
+  {/* Modal centralizado */}
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+  >
+    <div
+      className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto pointer-events-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-6 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">
+          {isEditing ? "Editar GVC" : "Novo GVC"}
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-400 text-2xl font-bold hover:text-gray-600 transition-colors"
+          title="Fechar (ESC)"
+          type="button"
         >
-          {/* Header */}
-          <div
-            style={{
-              position: "sticky",
-              top: 0,
-              backgroundColor: "white",
-              borderBottom: "1px solid #e5e7eb",
-              padding: "1.5rem 1.5rem",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+          ×
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 py-6 flex flex-col gap-5">
+        {/* Campo Nome */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Nome Completo{" "}
+            <span className="text-red-600 font-bold">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Ex: João Silva"
+            value={formData.nome}
+            onChange={(e) =>
+              setFormData({ ...formData, nome: e.target.value })
+            }
+            autoFocus
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmit();
+              }
             }}
+          />
+        </div>
+
+        {/* Campo Posição */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Posição{" "}
+            <span className="text-red-600 font-bold">*</span>
+          </label>
+          <input
+            type="number"
+            placeholder="1, 2, 3..."
+            value={formData.posicao}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                posicao: parseInt(e.target.value) || 1,
+              })
+            }
+            min={1}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+            📍 Posição do GVC (1º melhor colocado, 2º segundo, etc)
+          </p>
+        </div>
+
+        {/* Campo Status */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Status{" "}
+            <span className="text-red-600 font-bold">*</span>
+          </label>
+          <select
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-900 box-border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={formData.status}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                status: e.target.value as "ativo" | "inativo",
+              })
+            }
           >
-            <h2
-              style={{
-                fontSize: "1.125rem",
-                fontWeight: "bold",
-                color: "#111827",
-              }}
-            >
-              {isEditing ? "Editar GVC" : "Novo GVC"}
-            </h2>
-            <button
-              onClick={onClose}
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-                color: "#9ca3af",
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                cursor: "pointer",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#4b5563")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#9ca3af")}
-              title="Fechar (ESC)"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* Body */}
-          <div
-            style={{
-              padding: "1.5rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1.25rem",
-            }}
-          >
-            {/* Campo Nome */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  color: "#111827",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Nome Completo{" "}
-                <span style={{ color: "#dc2626", fontWeight: "bold" }}>*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: João Silva"
-                value={formData.nome}
-                onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
-                }
-                autoFocus
-                style={{
-                  width: "100%",
-                  padding: "0.625rem 0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  fontSize: "0.875rem",
-                  boxSizing: "border-box",
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSubmit();
-                  }
-                }}
-              />
-            </div>
-
-            {/* Campo Posição */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  color: "#111827",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Posição{" "}
-                <span style={{ color: "#dc2626", fontWeight: "bold" }}>*</span>
-              </label>
-              <input
-                type="number"
-                placeholder="1, 2, 3..."
-                value={formData.posicao}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    posicao: parseInt(e.target.value) || 1,
-                  })
-                }
-                min="1"
-                style={{
-                  width: "100%",
-                  padding: "0.625rem 0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  fontSize: "0.875rem",
-                  boxSizing: "border-box",
-                }}
-              />
-              <p
-                style={{
-                  fontSize: "0.75rem",
-                  color: "#6b7280",
-                  marginTop: "0.5rem",
-                  lineHeight: "1.5",
-                }}
-              >
-                📍 Posição do GVC (1º melhor colocado, 2º segundo, etc)
-              </p>
-            </div>
-
-            {/* Campo Status */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  color: "#111827",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Status{" "}
-                <span style={{ color: "#dc2626", fontWeight: "bold" }}>*</span>
-              </label>
-              <select
-                style={{
-                  width: "100%",
-                  padding: "0.625rem 0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  fontSize: "0.875rem",
-                  color: "#111827",
-                  boxSizing: "border-box",
-                  cursor: "pointer",
-                }}
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    status: e.target.value as "ativo" | "inativo",
-                  })
-                }
-              >
-                <option value="ativo">✓ Ativo</option>
-                <option value="inativo">✗ Inativo</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div
-            style={{
-              borderTop: "1px solid #e5e7eb",
-              padding: "1rem 1.5rem",
-              display: "flex",
-              gap: "0.75rem",
-              flexDirection: "column",
-              backgroundColor: "#f9fafb",
-              borderBottomLeftRadius: "0.5rem",
-              borderBottomRightRadius: "0.5rem",
-            }}
-          >
-            <Button
-              w="full"
-              colorScheme="blue"
-              onClick={handleSubmit}
-              loading={isLoading}
-            >
-              {isEditing ? "Atualizar" : "Criar"}
-            </Button>
-            <Button w="full" variant="outline" onClick={onClose}>
-              {permitirCadastroEmLote && !isEditing ? "Pronto" : "Cancelar"}
-            </Button>
-          </div>
+            <option value="ativo">✓ Ativo</option>
+            <option value="inativo">✗ Inativo</option>
+          </select>
         </div>
       </div>
-    </>
+
+      {/* Footer */}
+      <div className="border-t border-gray-200 px-6 py-4 flex flex-col gap-3 bg-gray-50 rounded-b-lg">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        >
+          {isLoading ? "Salvando..." : isEditing ? "Atualizar" : "Criar"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          {permitirCadastroEmLote && !isEditing ? "Pronto" : "Cancelar"}
+        </button>
+      </div>
+    </div>
+  </div>
+</>
   );
 };

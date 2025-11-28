@@ -1,14 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  Spinner,
-  Stack,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-
 import { Navbar } from "../../components/Navbar";
 import { FormGVC } from "../../components/GVC/FormGVC";
 import { ListaGVCTable } from "../../components/GVC/ListarGVCTable";
@@ -20,7 +10,6 @@ import {
   deletarGVC,
   toggleStatusGVC,
 } from "../../services/gvcService";
-import { toaster } from "../../components/ui/toasterExport";
 
 export const ListarGVC = () => {
   const [gvcs, setGvcs] = useState<GVC[]>([]);
@@ -40,11 +29,6 @@ export const ListarGVC = () => {
       setGvcs(dados);
     } catch (error) {
       console.error("Erro ao carregar GVCs:", error);
-      toaster.create({
-        title: "Erro ao carregar GVCs",
-        type: "error",
-        duration: 3000,
-      });
     } finally {
       setIsLoading(false);
     }
@@ -88,19 +72,9 @@ export const ListarGVC = () => {
       deletarGVC(gvc.id)
         .then(() => {
           setGvcs((prev) => prev.filter((g) => g.id !== gvc.id));
-          toaster.create({
-            title: "GVC deletado com sucesso",
-            type: "success",
-            duration: 2000,
-          });
         })
         .catch((error) => {
           console.error("Erro ao deletar GVC:", error);
-          toaster.create({
-            title: "Erro ao deletar GVC",
-            type: "error",
-            duration: 3000,
-          });
         });
     }
   };
@@ -117,79 +91,71 @@ export const ListarGVC = () => {
               : g
           )
         );
-        toaster.create({
-          title: `GVC ${novoStatus === "ativo" ? "ativado" : "desativado"}`,
-          type: "success",
-          duration: 2000,
-        });
       })
       .catch((error) => {
         console.error("Erro ao alterar status:", error);
-        toaster.create({
-          title: "Erro ao alterar status",
-          type: "error",
-          duration: 3000,
-        });
       });
   };
 
-  return (
-    <Box minH="100vh" bg="gray.50">
-      <Navbar />
+ return (
+  <div className="min-h-screen bg-gray-50">
+    <Navbar />
 
-      <Box px={6} py={8} maxW="1200px" mx="auto">
-        <VStack align="stretch" gap={6}>
-          {/* Header */}
-          <Stack
-            direction={{ base: "column", md: "row" }}
-            justify="space-between"
-            align="start"
+    <div className="px-6 py-8 max-w-5xl mx-auto">
+      <div className="flex flex-col gap-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+          <div className="flex flex-col items-start gap-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Guarda-Vidas (GVC)
+            </h1>
+            <p className="text-gray-600">
+              Gerencie todos os guarda-vidas do sistema
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAdicionarGVC}
+            className="inline-flex items-center justify-center px-5 py-3 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            <VStack align="start" gap={1}>
-              <Heading size="lg">Guarda-Vidas (GVC)</Heading>
-              <Text color="gray.600">
-                Gerencie todos os guarda-vidas do sistema
-              </Text>
-            </VStack>
+            + Novo GVC
+          </button>
+        </div>
 
-            <Button colorScheme="blue" onClick={handleAdicionarGVC} size="lg">
-              + Novo GVC
-            </Button>
-          </Stack>
+        {/* Conteúdo */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="mx-auto mb-4 w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-600">Carregando GVCs...</p>
+          </div>
+        ) : (
+          <ListaGVCTable
+            gvcs={gvcs}
+            onEdit={handleEditarGVC}
+            onDelete={handleDeletarGVC}
+            onToggleStatus={handleToggleStatusGVC}
+          />
+        )}
+      </div>
+    </div>
 
-          {/* Conteúdo */}
-          {isLoading ? (
-            <Box textAlign="center" py={12}>
-              <Spinner size="lg" mb={4} />
-              <Text color="gray.600">Carregando GVCs...</Text>
-            </Box>
-          ) : (
-            <ListaGVCTable
-              gvcs={gvcs}
-              onEdit={handleEditarGVC}
-              onDelete={handleDeletarGVC}
-              onToggleStatus={handleToggleStatusGVC}
-            />
-          )}
-        </VStack>
-      </Box>
-
-      {/* Modal do Formulário */}
-      <FormGVC
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setGvcEmEdicao(undefined);
-        }}
-        onSubmit={handleSubmitForm}
-        gvcInicial={gvcEmEdicao}
-        isEditing={!!gvcEmEdicao?.id}
-        permitirCadastroEmLote={!gvcEmEdicao?.id}
-        onNovoGVCAdicionado={() => {
-          // Recarregar lista após adicionar novo GVC
-          carregarGVCs();
-        }}
-      />
-    </Box>
-  );
+    {/* Modal do Formulário */}
+    <FormGVC
+      isOpen={isFormOpen}
+      onClose={() => {
+        setIsFormOpen(false);
+        setGvcEmEdicao(undefined);
+      }}
+      onSubmit={handleSubmitForm}
+      gvcInicial={gvcEmEdicao}
+      isEditing={!!gvcEmEdicao?.id}
+      permitirCadastroEmLote={!gvcEmEdicao?.id}
+      onNovoGVCAdicionado={() => {
+        // Recarregar lista após adicionar novo GVC
+        carregarGVCs();
+      }}
+    />
+  </div>
+);
 };
