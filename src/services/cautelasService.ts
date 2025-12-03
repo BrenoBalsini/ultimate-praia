@@ -14,6 +14,18 @@ import type { Cautela, ItemCautelado, HistoricoItem } from '../types/cautelas';
 
 const COLLECTION_NAME = 'cautelas';
 
+// FUNÇÃO AUXILIAR: Criar Timestamp correto (sem problema de timezone)
+const criarTimestampLocal = (dataString?: string): Timestamp => {
+  if (dataString) {
+    // Se foi passada uma data específica (formato YYYY-MM-DD)
+    const [ano, mes, dia] = dataString.split('-').map(Number);
+    const data = new Date(ano, mes - 1, dia, 12, 0, 0); // Meio-dia para evitar problemas de timezone
+    return Timestamp.fromDate(data);
+  }
+  // Se não, usar data/hora atual
+  return Timestamp.now();
+};
+
 // Criar cautela para um GVC
 export const criarCautela = async (
   gvcId: string,
@@ -72,7 +84,6 @@ export const obterCautelasAtivas = async (): Promise<Cautela[]> => {
       ...doc.data(),
     } as Cautela));
 
-    // Retornar apenas cautelas que têm itens ativos
     return cautelas.filter((c) => c.itensAtivos && c.itensAtivos.length > 0);
   } catch (error) {
     console.error('Erro ao obter cautelas ativas:', error);
@@ -80,7 +91,7 @@ export const obterCautelasAtivas = async (): Promise<Cautela[]> => {
   }
 };
 
-// Adicionar item à cautela
+// ATUALIZADO: Adicionar item com data correta
 export const adicionarItemCautela = async (
   cautelaId: string,
   item: ItemCautelado
@@ -108,6 +119,38 @@ export const adicionarItemCautela = async (
     });
   } catch (error) {
     console.error('Erro ao adicionar item:', error);
+    throw error;
+  }
+};
+
+// NOVO: Adicionar múltiplos itens de uma vez (para entregas de solicitações)
+export const adicionarMultiplosItens = async (
+  cautelaId: string,
+  itens: ItemCautelado[]
+): Promise<void> => {
+  try {
+    const cautelaRef = doc(db, COLLECTION_NAME, cautelaId);
+    const cautelaDoc = await getDoc(cautelaRef);
+
+    if (!cautelaDoc.exists()) {
+      throw new Error('Cautela não encontrada');
+    }
+
+    const cautelaData = cautelaDoc.data() as Cautela;
+    const itensAtivos = cautelaData.itensAtivos || [];
+
+    // Adicionar IDs únicos aos itens
+    const novosItens = itens.map((item) => ({
+      ...item,
+      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    }));
+
+    await updateDoc(cautelaRef, {
+      itensAtivos: [...itensAtivos, ...novosItens],
+      atualizadoEm: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Erro ao adicionar múltiplos itens:', error);
     throw error;
   }
 };
@@ -171,13 +214,13 @@ export const substituirItem = async (
   observacao?: string
 ): Promise<void> => {
   try {
-    // Primeiro devolver o item antigo
     await devolverItem(cautelaId, itemAntigoId, condicaoFinalAntigo, observacao);
-
-    // Depois adicionar o novo
     await adicionarItemCautela(cautelaId, novoItem);
   } catch (error) {
     console.error('Erro ao substituir item:', error);
     throw error;
   }
 };
+
+// EXPORTAR função auxiliar para uso em outros lugares
+export { criarTimestampLocal };

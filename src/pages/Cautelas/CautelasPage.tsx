@@ -4,48 +4,69 @@ import { TabCautelasAtivas } from '../../components/Cautelas/TabCautelasAtivas';
 import { TabSolicitacoesPendentes } from '../../components/Cautelas/TabSolicitacoesPendentes';
 import { ModalDetalhesCautela } from '../../components/Cautelas/ModalDetalhesCautela';
 import { FormAdicionarItem } from '../../components/Cautelas/FormAdicionarItem';
+import { Timestamp } from 'firebase/firestore';
 import type { GVC } from '../../services/gvcService';
-import type { Cautela, ItemCautelado, CondicaoItem } from '../../types/cautelas';
+import type { Cautela, ItemCautelado, CondicaoItem, Solicitacao } from '../../types/cautelas';
 import { obterGVCs } from '../../services/gvcService';
 import {
   obterCautelaPorGVC,
   criarCautela,
   adicionarItemCautela,
   devolverItem,
+  adicionarMultiplosItens,
+  criarTimestampLocal,
 } from '../../services/cautelasService';
+import {
+  criarSolicitacao,
+  obterSolicitacoesPendentes,
+  obterItensParaEntrega,
+  marcarItensEntregues,
+} from '../../services/solicitacoesService';
 
 type AbaAtiva = 'cautelas' | 'solicitacoes';
 
 export const CautelasPage = () => {
   const [aba, setAba] = useState<AbaAtiva>('cautelas');
   const [gvcs, setGvcs] = useState<GVC[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Cautelas
   const [gvcSelecionado, setGvcSelecionado] = useState<GVC | null>(null);
   const [cautelaSelecionada, setCautelaSelecionada] = useState<Cautela | null>(null);
   const [isModalDetalhesOpen, setIsModalDetalhesOpen] = useState(false);
   const [isModalAdicionarOpen, setIsModalAdicionarOpen] = useState(false);
+  
+  // Solicitações
+  const [isModalCriarSolicitacaoOpen, setIsModalCriarSolicitacaoOpen] = useState(false);
+  const [isModalEntregaOpen, setIsModalEntregaOpen] = useState(false);
+  const [solicitacaoParaEntrega, setSolicitacaoParaEntrega] = useState<Solicitacao | null>(null);
 
   useEffect(() => {
-    carregarGVCs();
+    carregarDados();
   }, []);
 
-  const carregarGVCs = async () => {
+  const carregarDados = async () => {
     try {
       setIsLoading(true);
-      const dados = await obterGVCs();
-      setGvcs(dados);
+      const [gvcsData, solicitacoesData] = await Promise.all([
+        obterGVCs(),
+        obterSolicitacoesPendentes(),
+      ]);
+      setGvcs(gvcsData);
+      setSolicitacoes(solicitacoesData);
     } catch (error) {
-      console.error('Erro ao carregar GVCs:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ===== CAUTELAS =====
   const handleSelectGVC = async (gvc: GVC) => {
     try {
       setGvcSelecionado(gvc);
       
-      // Buscar ou criar cautela do GVC
       let cautela = await obterCautelaPorGVC(gvc.id!);
       
       if (!cautela) {
@@ -64,12 +85,10 @@ export const CautelasPage = () => {
     if (!cautelaSelecionada?.id) return;
 
     try {
-      // Adicionar cada item
       for (const item of itens) {
         await adicionarItemCautela(cautelaSelecionada.id, item);
       }
 
-      // Recarregar cautela
       const cautelaAtualizada = await obterCautelaPorGVC(cautelaSelecionada.gvcId);
       setCautelaSelecionada(cautelaAtualizada);
     } catch (error) {
@@ -88,7 +107,6 @@ export const CautelasPage = () => {
     try {
       await devolverItem(cautelaSelecionada.id, itemId, condicaoFinal, observacao);
       
-      // Recarregar cautela
       const cautelaAtualizada = await obterCautelaPorGVC(cautelaSelecionada.gvcId);
       setCautelaSelecionada(cautelaAtualizada);
     } catch (error) {
@@ -98,8 +116,73 @@ export const CautelasPage = () => {
   };
 
   const handleSubstituirItem = (itemId: string) => {
-    // TODO: Implementar modal de substituição
     alert('Funcionalidade de substituição em desenvolvimento');
+  };
+
+  // ===== SOLICITAÇÕES =====
+  const handleCriarSolicitacao = async (
+    gvcId: string,
+    gvcNome: string,
+    itens: any[]
+  ) => {
+    try {
+      await criarSolicitacao(gvcId, gvcNome, itens);
+      const solicitacoesAtualizadas = await obterSolicitacoesPendentes();
+      setSolicitacoes(solicitacoesAtualizadas);
+    } catch (error) {
+      console.error('Erro ao criar solicitação:', error);
+      throw error;
+    }
+  };
+
+  const handleRealizarEntrega = (solicitacao: Solicitacao) => {
+    setSolicitacaoParaEntrega(solicitacao);
+    setIsModalEntregaOpen(true);
+  };
+
+  const handleConfirmarEntrega = async (itensEntreguesIds: string[]) => {
+    if (!solicitacaoParaEntrega) return;
+
+    try {
+      // 1. Obter os itens que foram marcados para entrega
+      const itensParaEntrega = await obterItensParaEntrega(
+        solicitacaoParaEntrega.id!,
+        itensEntreguesIds
+      );
+
+      // 2. Buscar ou criar cautela do GVC
+      let cautela = await obterCautelaPorGVC(solicitacaoParaEntrega.gvcId);
+      if (!cautela) {
+        cautela = await criarCautela(
+          solicitacaoParaEntrega.gvcId,
+          solicitacaoParaEntrega.gvcNome
+        );
+      }
+
+      // 3. Converter itens solicitados para ItemCautelado com data atual
+      const itensParaCautela: ItemCautelado[] = itensParaEntrega.map((item) => ({
+        item: item.item,
+        tamanho: item.tamanho,
+        condicao: item.condicao,
+        dataEmprestimo: Timestamp.now(), // Data de hoje
+        observacao: '',
+      }));
+
+      // 4. Adicionar itens à cautela
+      await adicionarMultiplosItens(cautela.id!, itensParaCautela);
+
+      // 5. Marcar itens como entregues na solicitação
+      await marcarItensEntregues(solicitacaoParaEntrega.id!, itensEntreguesIds);
+
+      // 6. Atualizar lista de solicitações
+      const solicitacoesAtualizadas = await obterSolicitacoesPendentes();
+      setSolicitacoes(solicitacoesAtualizadas);
+
+      alert('Itens entregues com sucesso!');
+    } catch (error) {
+      console.error('Erro ao confirmar entrega:', error);
+      throw error;
+    }
   };
 
   return (
@@ -152,13 +235,30 @@ export const CautelasPage = () => {
               {aba === 'cautelas' && (
                 <TabCautelasAtivas gvcs={gvcs} onSelectGVC={handleSelectGVC} />
               )}
-              {aba === 'solicitacoes' && <TabSolicitacoesPendentes />}
+              {aba === 'solicitacoes' && (
+                <TabSolicitacoesPendentes
+                  gvcs={gvcs}
+                  solicitacoes={solicitacoes}
+                  isModalCriarOpen={isModalCriarSolicitacaoOpen}
+                  onOpenModalCriar={() => setIsModalCriarSolicitacaoOpen(true)}
+                  onCloseModalCriar={() => setIsModalCriarSolicitacaoOpen(false)}
+                  onCriarSolicitacao={handleCriarSolicitacao}
+                  onRealizarEntrega={handleRealizarEntrega}
+                  solicitacaoSelecionada={solicitacaoParaEntrega}
+                  isModalEntregaOpen={isModalEntregaOpen}
+                  onCloseModalEntrega={() => {
+                    setIsModalEntregaOpen(false);
+                    setSolicitacaoParaEntrega(null);
+                  }}
+                  onConfirmarEntrega={handleConfirmarEntrega}
+                />
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Modais */}
+      {/* Modais de Cautelas */}
       <ModalDetalhesCautela
         isOpen={isModalDetalhesOpen}
         onClose={() => {

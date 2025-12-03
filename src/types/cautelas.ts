@@ -35,6 +35,25 @@ export interface Cautela {
   atualizadoEm?: Timestamp;
 }
 
+// ATUALIZADO: ItemSolicitado agora tem tamanho e condição
+export interface ItemSolicitado {
+  id?: string;
+  item: string;
+  tamanho: TamanhoItem;
+  condicao: CondicaoItem;
+  entregue: boolean;
+}
+
+export interface Solicitacao {
+  id?: string;
+  gvcId: string;
+  gvcNome: string;
+  itens: ItemSolicitado[];
+  status: 'pendente' | 'parcial' | 'concluida';
+  criadaEm?: Timestamp;
+  atualizadaEm?: Timestamp;
+}
+
 // Lista de itens disponíveis para cautela
 export const ITENS_CAUTELA = [
   'lifebelt',
