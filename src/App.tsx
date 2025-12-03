@@ -11,6 +11,7 @@ import { FaltasMateriaisTela } from "./pages/Postos/FaltasMateriaisTela";
 import { AlteracoesPostoTela } from "./pages/Postos/AlteracoesPostoTela";
 import { GlobalToaster } from "./components/ui/GlobalToaster";
 import { CondutaElogios } from "./pages/CondutaElogio/CondutaElogios";
+import { CautelasPage } from "./pages/Cautelas/CautelasPage";
 
 function App() {
   return (
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AlteracoesPostoTela />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cautelas"
+            element={
+              <ProtectedRoute>
+                <CautelasPage />
               </ProtectedRoute>
             }
           />
