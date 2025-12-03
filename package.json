@@ -13,7 +13,6 @@
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "@tailwindcss/vite": "^4.1.17",
     "firebase": "^12.6.0",
-    "framer-motion": "^12.23.24",
     "lucide-react": "^0.555.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.0",
