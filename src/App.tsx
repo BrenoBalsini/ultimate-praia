@@ -10,6 +10,7 @@ import { MateriaisATela } from "./pages/Postos/MateriaisATela";
 import { FaltasMateriaisTela } from "./pages/Postos/FaltasMateriaisTela";
 import { AlteracoesPostoTela } from "./pages/Postos/AlteracoesPostoTela";
 import { GlobalToaster } from "./components/ui/GlobalToaster";
+import { CondutaElogios } from "./pages/CondutaElogio/CondutaElogios";
 
 function App() {
   return (
@@ -72,12 +73,19 @@ function App() {
             }
           />
 
+          <Route
+            path="/conduta"
+            element={
+              <ProtectedRoute>
+                <CondutaElogios />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <GlobalToaster>
-        </GlobalToaster>
-
+        <GlobalToaster></GlobalToaster>
       </BrowserRouter>
     </AuthProvider>
   );
