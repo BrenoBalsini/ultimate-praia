@@ -1,31 +1,34 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { GVC } from '../../services/gvcService';
-import type { CondutaElogio } from '../../types/conduta';
 
-interface FormCondutaElogioProps {
+interface FormElogioProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<CondutaElogio, 'id' | 'criadoEm' | 'criadoPor'>) => Promise<void>;
-  tipo: 'conduta' | 'elogio';
+  onSubmit: (data: {
+    titulo: string;
+    descricao?: string;
+    gvcIds: string[];
+    gvcNomes: string[];
+  }) => Promise<void>;
   gvcsDisponiveis: GVC[];
 }
 
-export const FormCondutaElogio = ({
+export const FormElogio = ({
   isOpen,
   onClose,
   onSubmit,
-  tipo,
   gvcsDisponiveis,
-}: FormCondutaElogioProps) => {
+}: FormElogioProps) => {
+  const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [gvcsSelecionados, setGvcsSelecionados] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [erro, setErro] = useState('');
 
-  // Resetar form ao abrir/fechar
   useEffect(() => {
     if (!isOpen) {
+      setTitulo('');
       setDescricao('');
       setGvcsSelecionados([]);
       setErro('');
@@ -44,9 +47,8 @@ export const FormCondutaElogio = ({
     e.preventDefault();
     setErro('');
 
-    // Validações
-    if (!descricao.trim()) {
-      setErro('A descrição é obrigatória');
+    if (!titulo.trim()) {
+      setErro('O título é obrigatório');
       return;
     }
 
@@ -58,14 +60,13 @@ export const FormCondutaElogio = ({
     try {
       setIsSubmitting(true);
 
-      // Buscar nomes dos GVCs selecionados
       const gvcsNomes = gvcsDisponiveis
         .filter((gvc) => gvcsSelecionados.includes(gvc.id || ''))
         .map((gvc) => gvc.nome);
 
       await onSubmit({
-        tipo,
-        descricao: descricao.trim(),
+        titulo: titulo.trim(),
+        descricao: descricao.trim() || undefined,
         gvcIds: gvcsSelecionados,
         gvcNomes: gvcsNomes,
       });
@@ -81,15 +82,11 @@ export const FormCondutaElogio = ({
 
   if (!isOpen) return null;
 
-  const titulo = tipo === 'conduta' ? 'Nova Conduta' : 'Novo Elogio';
-  const corBotao = tipo === 'conduta' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700';
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">{titulo}</h2>
+          <h2 className="text-xl font-bold text-gray-900">Novo Elogio</h2>
           <button
             type="button"
             onClick={onClose}
@@ -99,12 +96,27 @@ export const FormCondutaElogio = ({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Título */}
+          <div>
+            <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-2">
+              Título *
+            </label>
+            <input
+              id="titulo"
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ex: Resgate bem sucedido"
+              disabled={isSubmitting}
+            />
+          </div>
+
           {/* Descrição */}
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">
-              Descrição *
+              Descrição (opcional)
             </label>
             <textarea
               id="descricao"
@@ -112,7 +124,7 @@ export const FormCondutaElogio = ({
               onChange={(e) => setDescricao(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={`Descreva o ${tipo === 'conduta' ? 'ocorrido' : 'elogio'}...`}
+              placeholder="Descreva o elogio..."
               disabled={isSubmitting}
             />
           </div>
@@ -137,12 +149,10 @@ export const FormCondutaElogio = ({
                       disabled={isSubmitting}
                       className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-900">
-                      {gvc.nome} <span className="text-gray-500">(Posição {gvc.posicao})</span>
-                    </span>
+                    <span className="text-sm text-gray-900">{gvc.nome}</span>
                   </label>
                 ))}
-              
+
               {gvcsDisponiveis.filter((gvc) => gvc.status === 'ativo').length === 0 && (
                 <p className="text-sm text-gray-500 text-center py-4">
                   Nenhum guarda-vidas ativo disponível
@@ -171,7 +181,7 @@ export const FormCondutaElogio = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 ${corBotao}`}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               {isSubmitting ? 'Salvando...' : 'Salvar'}
             </button>

@@ -10,8 +10,8 @@ import { MateriaisATela } from "./pages/Postos/MateriaisATela";
 import { FaltasMateriaisTela } from "./pages/Postos/FaltasMateriaisTela";
 import { AlteracoesPostoTela } from "./pages/Postos/AlteracoesPostoTela";
 import { GlobalToaster } from "./components/ui/GlobalToaster";
-import { CondutaElogios } from "./pages/CondutaElogio/CondutaElogios";
 import { CautelasPage } from "./pages/Cautelas/CautelasPage";
+import { AlteracoesElogiosPage } from "./pages/Alteracoes/AlteracoesElogiosPage";
 
 function App() {
   return (
@@ -86,7 +86,7 @@ function App() {
             path="/conduta"
             element={
               <ProtectedRoute>
-                <CondutaElogios />
+                <AlteracoesElogiosPage />
               </ProtectedRoute>
             }
           />
