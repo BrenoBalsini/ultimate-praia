@@ -1,28 +1,29 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CardPosto } from '../../components/CardPosto';
-import { POSTOS_FIXOS } from '../../types/postos';
-import type { NumeroPosto, StatusMaterialA } from '../../types/postos';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { CardPosto } from "../../components/CardPosto";
+import { POSTOS_FIXOS } from "../../types/postos";
+import type { NumeroPosto, StatusMaterialA } from "../../types/postos";
 import {
   initPostosIfNeeded,
   getPostoByNumero,
   setPostoAtivo,
-} from '../../services/postosService';
-import { calcularStatusMateriaisAParaPosto } from '../../utils/statusMaterialA';
+} from "../../services/postosService";
+import { calcularStatusMateriaisAParaPosto } from "../../utils/statusMaterialA";
 import {
   calcularStatusMateriaisBParaPosto,
   type StatusMateriaisBTipo,
-} from '../../utils/statusMaterialB';
-import { temAlteracoesPendentes } from '../../utils/statusAlteracoes';
+} from "../../utils/statusMaterialB";
+import { temAlteracoesPendentes } from "../../utils/statusAlteracoes";
+import { useAuth } from "../../hooks/useAuth";
 
 type MaterialKey =
-  | 'binoculo'
-  | 'guardassol'
-  | 'radio'
-  | 'whitemed'
-  | 'bolsaAph'
-  | 'limpeza'
-  | 'alteracoes';
+  | "binoculo"
+  | "guardassol"
+  | "radio"
+  | "whitemed"
+  | "bolsaAph"
+  | "limpeza"
+  | "alteracoes";
 
 interface StatusMateriaisAByPosto {
   [postoNumero: number]: {
@@ -42,15 +43,53 @@ interface AlteracoesByPosto {
 
 export const TabPostos = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
   const [postosAtivos, setPostosAtivos] = useState<Record<number, boolean>>({});
-  const [statusMateriaisA, setStatusMateriaisA] = useState<StatusMateriaisAByPosto>({});
-  const [statusMateriaisB, setStatusMateriaisB] = useState<StatusMateriaisBByPosto>({});
-  const [alteracoesPendentes, setAlteracoesPendentes] = useState<AlteracoesByPosto>({});
+  const [statusMateriaisA, setStatusMateriaisA] =
+    useState<StatusMateriaisAByPosto>({});
+  const [statusMateriaisB, setStatusMateriaisB] =
+    useState<StatusMateriaisBByPosto>({});
+  const [alteracoesPendentes, setAlteracoesPendentes] =
+    useState<AlteracoesByPosto>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("🔍 TabPostos - authLoading:", authLoading);
+    console.log("🔍 TabPostos - user:", user);
+    console.log("🔍 TabPostos - user?.uid:", user?.uid);
+      if (authLoading) {
+    console.log('⏳ Aguardando verificação de autenticação...');
+    return;
+  }
+  
+
+  if (!user) {
+    console.log('❌ Usuário não autenticado');
+    setLoading(false);
+    return;
+  }
+
+   console.log('✅ Usuário autenticado, carregando postos...');
+
     const loadPostos = async () => {
+      console.log("🔍 TabPostos - authLoading:", authLoading);
+      console.log("🔍 TabPostos - user:", user);
+      console.log("🔍 TabPostos - user?.uid:", user?.uid);
+
+      if (authLoading) {
+        console.log("⏳ Aguardando verificação de autenticação...");
+        return;
+      }
+
+      if (!user) {
+        console.log("❌ Usuário não autenticado");
+        setLoading(false);
+        return;
+      }
+      console.log("✅ Usuário autenticado, carregando postos...");
       try {
+
         await initPostosIfNeeded();
 
         const estados: Record<number, boolean> = {};
@@ -59,11 +98,12 @@ export const TabPostos = () => {
         const altPend: AlteracoesByPosto = {};
 
         for (const numero of POSTOS_FIXOS) {
+          
           const posto = await getPostoByNumero(numero as NumeroPosto);
           estados[numero] = posto?.ativo ?? true;
 
           const statusAposto = await calcularStatusMateriaisAParaPosto(
-            numero as NumeroPosto,
+            numero as NumeroPosto
           );
           statusA[numero] = {
             binoculo: statusAposto.binoculo,
@@ -72,7 +112,7 @@ export const TabPostos = () => {
           };
 
           const statusBposto = await calcularStatusMateriaisBParaPosto(
-            numero as NumeroPosto,
+            numero as NumeroPosto
           );
           statusB[numero] = statusBposto;
 
@@ -85,14 +125,14 @@ export const TabPostos = () => {
         setStatusMateriaisB(statusB);
         setAlteracoesPendentes(altPend);
       } catch (error) {
-        console.error('Erro ao carregar postos:', error);
+        console.error("Erro ao carregar postos:", error);
       } finally {
         setLoading(false);
       }
     };
 
     loadPostos();
-  }, []);
+  }, [user, authLoading]);
 
   const handleToggleAtivo = async (postoNumero: number) => {
     try {
@@ -104,30 +144,34 @@ export const TabPostos = () => {
       }));
       await setPostoAtivo(postoNumero as NumeroPosto, novo);
     } catch (error) {
-      console.error('Erro ao atualizar posto:', error);
+      console.error("Erro ao atualizar posto:", error);
     }
   };
 
   const handleMaterialClick = (postoNumero: number, material: MaterialKey) => {
-    if (material === 'binoculo' || material === 'guardassol' || material === 'radio') {
+    if (
+      material === "binoculo" ||
+      material === "guardassol" ||
+      material === "radio"
+    ) {
       navigate(`/postos/${postoNumero}/materiais/${material}`);
       return;
     }
 
-    if (material === 'whitemed') {
+    if (material === "whitemed") {
       navigate(`/postos/${postoNumero}/faltas/whitemed`);
       return;
     }
-    if (material === 'bolsaAph') {
+    if (material === "bolsaAph") {
       navigate(`/postos/${postoNumero}/faltas/bolsa_aph`);
       return;
     }
-    if (material === 'limpeza') {
+    if (material === "limpeza") {
       navigate(`/postos/${postoNumero}/faltas/limpeza`);
       return;
     }
 
-    if (material === 'alteracoes') {
+    if (material === "alteracoes") {
       navigate(`/postos/${postoNumero}/alteracoes`);
       return;
     }
@@ -135,8 +179,16 @@ export const TabPostos = () => {
     console.log(`Clicou em ${material} do Posto ${postoNumero}`);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return <p className="text-gray-600">Carregando postos...</p>;
+  }
+
+  if (!user) {
+    return (
+      <p className="text-red-600">
+        Você precisa estar autenticado para ver os postos.
+      </p>
+    );
   }
 
   return (
@@ -147,15 +199,17 @@ export const TabPostos = () => {
             key={numero}
             postoNumero={numero}
             ativo={postosAtivos[numero]}
-            statusBinoculo={statusMateriaisA[numero]?.binoculo ?? 'ausente'}
-            statusGuardassol={statusMateriaisA[numero]?.guardassol ?? 'ausente'}
-            statusRadio={statusMateriaisA[numero]?.radio ?? 'ausente'}
-            statusWhitemed={statusMateriaisB[numero]?.whitemed ?? 'ok'}
-            statusBolsaAph={statusMateriaisB[numero]?.bolsaAph ?? 'ok'}
-            statusLimpeza={statusMateriaisB[numero]?.limpeza ?? 'ok'}
+            statusBinoculo={statusMateriaisA[numero]?.binoculo ?? "ausente"}
+            statusGuardassol={statusMateriaisA[numero]?.guardassol ?? "ausente"}
+            statusRadio={statusMateriaisA[numero]?.radio ?? "ausente"}
+            statusWhitemed={statusMateriaisB[numero]?.whitemed ?? "ok"}
+            statusBolsaAph={statusMateriaisB[numero]?.bolsaAph ?? "ok"}
+            statusLimpeza={statusMateriaisB[numero]?.limpeza ?? "ok"}
             temAlteracoesPendentes={alteracoesPendentes[numero] ?? false}
             onToggleAtivo={() => handleToggleAtivo(numero)}
-            onMaterialClick={(material) => handleMaterialClick(numero, material as MaterialKey)}
+            onMaterialClick={(material) =>
+              handleMaterialClick(numero, material as MaterialKey)
+            }
           />
         ))}
       </div>

@@ -2,34 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Negar tudo por padrão
+    // Permite tudo para usuários autenticados
     match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Usuários autenticados podem ler/escrever seus próprios dados
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-    }
-
-    // Coleção de praias - leitura pública, escrita autenticada
-    match /praias/{praiaId} {
-      allow read: if true;
-      allow create, update, delete: if request.auth != null;
-    }
-
-    // Postagens/GVCs
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.userId;
-    }
-
-    // Comentários
-    match /posts/{postId}/comments/{commentId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.userId;
+      allow read, write: if request.auth != null;
     }
   }
 }

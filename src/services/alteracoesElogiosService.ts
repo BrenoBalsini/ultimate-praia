@@ -13,21 +13,34 @@ import {
 import { db } from '../firebase/config';
 import type { Alteracao, Elogio, Conceito } from '../types/alteracoes';
 
+
 // ===== ALTERAÇÕES =====
 const ALTERACOES_COLLECTION = 'alteracoes';
+
 
 export const criarAlteracao = async (
   data: Omit<Alteracao, 'id' | 'criadoEm' | 'criadoPor' | 'diasRestantes' | 'inseridoNaTabela'>,
   usuarioEmail?: string
 ): Promise<Alteracao> => {
   try {
-    const docRef = await addDoc(collection(db, ALTERACOES_COLLECTION), {
-      ...data,
+    // Cria o objeto base sem campos undefined
+    const alteracaoData: any = {
+      tipo: data.tipo,
+      gvcId: data.gvcId,
+      gvcNome: data.gvcNome,
+      descricao: data.descricao,
       diasRestantes: 365,
       inseridoNaTabela: false,
       criadoEm: Timestamp.now(),
       criadoPor: usuarioEmail || 'Sistema',
-    });
+    };
+
+    // Adiciona diasSuspensao apenas se existir
+    if (data.tipo === 'Suspensão' && data.diasSuspensao !== undefined) {
+      alteracaoData.diasSuspensao = data.diasSuspensao;
+    }
+
+    const docRef = await addDoc(collection(db, ALTERACOES_COLLECTION), alteracaoData);
 
     return {
       id: docRef.id,
@@ -42,6 +55,7 @@ export const criarAlteracao = async (
     throw error;
   }
 };
+
 
 export const obterAlteracoesAtivas = async (): Promise<Alteracao[]> => {
   try {
@@ -62,6 +76,7 @@ export const obterAlteracoesAtivas = async (): Promise<Alteracao[]> => {
   }
 };
 
+
 export const obterHistoricoAlteracoes = async (): Promise<Alteracao[]> => {
   try {
     const q = query(
@@ -81,6 +96,7 @@ export const obterHistoricoAlteracoes = async (): Promise<Alteracao[]> => {
   }
 };
 
+
 export const marcarAlteracaoComoInserida = async (id: string): Promise<void> => {
   try {
     await updateDoc(doc(db, ALTERACOES_COLLECTION, id), {
@@ -92,6 +108,7 @@ export const marcarAlteracaoComoInserida = async (id: string): Promise<void> => 
   }
 };
 
+
 export const deletarAlteracao = async (id: string): Promise<void> => {
   try {
     await deleteDoc(doc(db, ALTERACOES_COLLECTION, id));
@@ -101,8 +118,10 @@ export const deletarAlteracao = async (id: string): Promise<void> => {
   }
 };
 
+
 // ===== ELOGIOS =====
 const ELOGIOS_COLLECTION = 'elogios';
+
 
 export const criarElogio = async (
   data: Omit<Elogio, 'id' | 'criadoEm' | 'criadoPor' | 'inseridoNaTabela'>,
@@ -129,6 +148,7 @@ export const criarElogio = async (
   }
 };
 
+
 export const obterElogiosAtivos = async (): Promise<Elogio[]> => {
   try {
     const q = query(
@@ -147,6 +167,7 @@ export const obterElogiosAtivos = async (): Promise<Elogio[]> => {
     throw error;
   }
 };
+
 
 export const obterHistoricoElogios = async (): Promise<Elogio[]> => {
   try {
@@ -167,6 +188,7 @@ export const obterHistoricoElogios = async (): Promise<Elogio[]> => {
   }
 };
 
+
 export const marcarElogioComoInserido = async (id: string): Promise<void> => {
   try {
     await updateDoc(doc(db, ELOGIOS_COLLECTION, id), {
@@ -178,6 +200,7 @@ export const marcarElogioComoInserido = async (id: string): Promise<void> => {
   }
 };
 
+
 export const deletarElogio = async (id: string): Promise<void> => {
   try {
     await deleteDoc(doc(db, ELOGIOS_COLLECTION, id));
@@ -187,8 +210,10 @@ export const deletarElogio = async (id: string): Promise<void> => {
   }
 };
 
+
 // ===== CONCEITOS =====
 const CONCEITOS_COLLECTION = 'conceitos';
+
 
 export const criarConceito = async (
   data: Omit<Conceito, 'id' | 'criadoEm' | 'criadoPor' | 'inseridoNaTabela'>,
@@ -215,6 +240,7 @@ export const criarConceito = async (
   }
 };
 
+
 export const obterConceitosAtivos = async (): Promise<Conceito[]> => {
   try {
     const q = query(
@@ -233,6 +259,7 @@ export const obterConceitosAtivos = async (): Promise<Conceito[]> => {
     throw error;
   }
 };
+
 
 export const obterHistoricoConceitos = async (): Promise<Conceito[]> => {
   try {
@@ -253,6 +280,7 @@ export const obterHistoricoConceitos = async (): Promise<Conceito[]> => {
   }
 };
 
+
 export const marcarConceitoComoInserido = async (id: string): Promise<void> => {
   try {
     await updateDoc(doc(db, CONCEITOS_COLLECTION, id), {
@@ -263,6 +291,7 @@ export const marcarConceitoComoInserido = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
 
 export const deletarConceito = async (id: string): Promise<void> => {
   try {
