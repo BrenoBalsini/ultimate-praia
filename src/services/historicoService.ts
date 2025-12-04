@@ -5,8 +5,7 @@ import type {
   TipoMaterialA,
   TipoEvento,
   CategoriaMaterialB,
-  FiltroHistoricoMaterial,
-  FiltroHistoricoPosto,
+
 } from '../types/postos';
 
 const COLLECTION_NAME = 'historico';
@@ -122,8 +121,7 @@ export const registrarEventoAlteracaoPosto = async (params: {
 };
 
 export const buscarHistorico = async (
-  filtroMaterial: FiltroHistoricoMaterial = null,
-  filtroPosto: FiltroHistoricoPosto = null,
+
   limite: number = 50,
 ): Promise<HistoricoDoc[]> => {
   let q = query(

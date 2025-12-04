@@ -51,7 +51,7 @@ const PendenciaCard = ({ pendencia }: { pendencia: Pendencia }) => {
       const falta = pendencia as PendenciaFalta;
       return `${LABEL_CATEGORIA[falta.categoria]} - ${falta.materialNome}`;
     }
-    const alteracao = pendencia as PendenciaAlteracao;
+    
     return `Alteração estrutural`;
   };
 

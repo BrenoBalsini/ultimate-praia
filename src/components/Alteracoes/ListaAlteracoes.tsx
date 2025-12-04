@@ -1,4 +1,4 @@
-import { Trash2, Check, AlertCircle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { Alteracao } from '../../types/alteracoes';
 
 interface ListaAlteracoesProps {

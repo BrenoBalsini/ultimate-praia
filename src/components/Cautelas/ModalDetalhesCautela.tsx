@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Cautela, CondicaoItem } from '../../types/cautelas';
 
 interface ModalDetalhesCautelaProps {

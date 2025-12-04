@@ -1,9 +1,8 @@
 import type { NumeroPosto, CategoriaMaterialB } from '../types/postos';
 import {
   listarFaltasPorPostoECategoria,
-  type FaltaMaterialDoc,
 } from './faltasService';
-import { listarAlteracoesAbertasPorPosto, type AlteracaoPostoDoc } from './alteracoesService';
+import { listarAlteracoesAbertasPorPosto } from './alteracoesService';
 
 export interface PendenciaFalta {
   tipo: 'falta';

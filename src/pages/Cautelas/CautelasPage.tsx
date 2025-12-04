@@ -14,7 +14,6 @@ import {
   adicionarItemCautela,
   devolverItem,
   adicionarMultiplosItens,
-  criarTimestampLocal,
 } from '../../services/cautelasService';
 import {
   criarSolicitacao,
@@ -115,7 +114,7 @@ export const CautelasPage = () => {
     }
   };
 
-  const handleSubstituirItem = (itemId: string) => {
+  const handleSubstituirItem = () => {
     alert('Funcionalidade de substituição em desenvolvimento');
   };
 

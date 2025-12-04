@@ -1,4 +1,4 @@
-import type { NumeroPosto, CategoriaMaterialB } from '../types/postos';
+import type { NumeroPosto} from '../types/postos';
 import { listarFaltasPorPostoECategoria } from '../services/faltasService';
 import { listarAlteracoesAbertasPorPosto } from '../services/alteracoesService';
 
