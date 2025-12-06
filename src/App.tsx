@@ -12,6 +12,7 @@ import { AlteracoesPostoTela } from "./pages/Postos/AlteracoesPostoTela";
 import { GlobalToaster } from "./components/ui/GlobalToaster";
 import { CautelasPage } from "./pages/Cautelas/CautelasPage";
 import { AlteracoesElogiosPage } from "./pages/Alteracoes/AlteracoesElogiosPage";
+import { DetalhesGVC } from "./pages/GVC/DetalhesGVC";
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ListarGVC />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gvcs/:gvcId"
+            element={
+              <ProtectedRoute>
+                <DetalhesGVC />
               </ProtectedRoute>
             }
           />

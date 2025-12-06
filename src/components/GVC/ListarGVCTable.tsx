@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
-import { type GVC } from '../../services/gvcService';
-import { Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import React, { useMemo } from "react";
+import { type GVC } from "../../services/gvcService";
+import { Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ListaGVCTableProps {
   gvcs: GVC[];
@@ -9,7 +10,7 @@ interface ListaGVCTableProps {
   onToggleStatus: (gvc: GVC) => void;
 }
 
-type SortBy = 'posicao' | 'alfabetica';
+type SortBy = "posicao" | "alfabetica";
 
 export const ListaGVCTable = ({
   gvcs,
@@ -17,8 +18,9 @@ export const ListaGVCTable = ({
   onDelete,
   onToggleStatus,
 }: ListaGVCTableProps) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [sortBy, setSortBy] = React.useState<SortBy>('posicao');
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [sortBy, setSortBy] = React.useState<SortBy>("posicao");
+  const navigate = useNavigate();
 
   // Filtrar por nome/sobrenome
   const gvcsFiltrados = useMemo(() => {
@@ -30,7 +32,7 @@ export const ListaGVCTable = ({
   // Ordenar por posição ou alfabética
   const gvcsOrdenados = useMemo(() => {
     const copia = [...gvcsFiltrados];
-    if (sortBy === 'posicao') {
+    if (sortBy === "posicao") {
       return copia.sort((a, b) => a.posicao - b.posicao);
     } else {
       return copia.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -46,10 +48,12 @@ export const ListaGVCTable = ({
             <span className="inline-block w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">
               {gvc.posicao}º
             </span>
-            <h3 className="font-semibold text-gray-900 line-clamp-1">{gvc.nome}</h3>
+            <h3 className="font-semibold text-gray-900 line-clamp-1">
+              {gvc.nome}
+            </h3>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            {gvc.status === 'ativo' ? (
+            {gvc.status === "ativo" ? (
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                 <CheckCircle size={14} />
                 Ativo
@@ -78,12 +82,12 @@ export const ListaGVCTable = ({
           type="button"
           onClick={() => onToggleStatus(gvc)}
           className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-            gvc.status === 'ativo'
-              ? 'text-orange-600 hover:bg-orange-50'
-              : 'text-green-600 hover:bg-green-50'
+            gvc.status === "ativo"
+              ? "text-orange-600 hover:bg-orange-50"
+              : "text-green-600 hover:bg-green-50"
           }`}
         >
-          {gvc.status === 'ativo' ? (
+          {gvc.status === "ativo" ? (
             <>
               <XCircle size={16} />
               <span className="hidden sm:inline">Desativar</span>
@@ -118,7 +122,9 @@ export const ListaGVCTable = ({
           className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Ordenar:</span>
+          <span className="text-sm font-bold text-gray-700 whitespace-nowrap">
+            Ordenar:
+          </span>
           <select
             className="flex-1 px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={sortBy}
@@ -148,15 +154,9 @@ export const ListaGVCTable = ({
                   <th className="px-3 py-3 text-center font-bold w-20">
                     Posição
                   </th>
-                  <th className="px-3 py-3 text-left font-bold">
-                    Nome
-                  </th>
-                  <th className="px-3 py-3 text-left font-bold">
-                    Status
-                  </th>
-                  <th className="px-3 py-3 text-center font-bold">
-                    Ações
-                  </th>
+                  <th className="px-3 py-3 text-left font-bold">Nome</th>
+                  <th className="px-3 py-3 text-left font-bold">Status</th>
+                  <th className="px-3 py-3 text-center font-bold">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,18 +168,23 @@ export const ListaGVCTable = ({
                     <td className="px-3 py-3 text-center font-bold text-base">
                       {gvc.posicao}º
                     </td>
-                    <td className="px-3 py-3 font-medium">
-                      {gvc.nome}
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate(`/gvcs/${gvc.id}`)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-left"
+                      >
+                        {gvc.nome}
+                      </button>
                     </td>
                     <td className="px-3 py-3">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          gvc.status === 'ativo'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                          gvc.status === "ativo"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {gvc.status === 'ativo' ? '✓ Ativo' : '✗ Inativo'}
+                        {gvc.status === "ativo" ? "✓ Ativo" : "✗ Inativo"}
                       </span>
                     </td>
                     <td className="px-3 py-3">
@@ -195,12 +200,12 @@ export const ListaGVCTable = ({
                           type="button"
                           onClick={() => onToggleStatus(gvc)}
                           className={`px-2 py-1 text-sm rounded-md transition-colors ${
-                            gvc.status === 'ativo'
-                              ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
-                              : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                            gvc.status === "ativo"
+                              ? "text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              : "text-green-600 hover:text-green-700 hover:bg-green-50"
                           }`}
                         >
-                          {gvc.status === 'ativo' ? 'Desativar' : 'Ativar'}
+                          {gvc.status === "ativo" ? "Desativar" : "Ativar"}
                         </button>
                         <button
                           type="button"
@@ -221,8 +226,8 @@ export const ListaGVCTable = ({
         <div className="text-center py-8">
           <p className="text-gray-500">
             {searchTerm
-              ? 'Nenhum GVC encontrado com esse nome'
-              : 'Nenhum GVC cadastrado ainda'}
+              ? "Nenhum GVC encontrado com esse nome"
+              : "Nenhum GVC cadastrado ainda"}
           </p>
         </div>
       )}
