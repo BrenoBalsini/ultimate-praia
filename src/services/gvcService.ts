@@ -12,8 +12,6 @@ import {
 import { db } from '../firebase/config';
 
 export interface GVC {
-  re: ReactNode;
-  postoFixo: string;
   id?: string;
   nome: string;
   posicao: number; // MUDADO: agora é posição (1, 2, 3, ...)

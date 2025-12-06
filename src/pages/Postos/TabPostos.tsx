@@ -55,41 +55,25 @@ export const TabPostos = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🔍 TabPostos - authLoading:", authLoading);
-    console.log("🔍 TabPostos - user:", user);
-    console.log("🔍 TabPostos - user?.uid:", user?.uid);
-      if (authLoading) {
-    console.log('⏳ Aguardando verificação de autenticação...');
-    return;
-  }
-  
+    if (authLoading) {
+      return;
+    }
 
-  if (!user) {
-    console.log('❌ Usuário não autenticado');
-    setLoading(false);
-    return;
-  }
-
-   console.log('✅ Usuário autenticado, carregando postos...');
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const loadPostos = async () => {
-      console.log("🔍 TabPostos - authLoading:", authLoading);
-      console.log("🔍 TabPostos - user:", user);
-      console.log("🔍 TabPostos - user?.uid:", user?.uid);
-
       if (authLoading) {
-        console.log("⏳ Aguardando verificação de autenticação...");
         return;
       }
 
       if (!user) {
-        console.log("❌ Usuário não autenticado");
         setLoading(false);
         return;
       }
-      console.log("✅ Usuário autenticado, carregando postos...");
       try {
-
         await initPostosIfNeeded();
 
         const estados: Record<number, boolean> = {};
@@ -98,7 +82,6 @@ export const TabPostos = () => {
         const altPend: AlteracoesByPosto = {};
 
         for (const numero of POSTOS_FIXOS) {
-          
           const posto = await getPostoByNumero(numero as NumeroPosto);
           estados[numero] = posto?.ativo ?? true;
 
@@ -175,8 +158,6 @@ export const TabPostos = () => {
       navigate(`/postos/${postoNumero}/alteracoes`);
       return;
     }
-
-    console.log(`Clicou em ${material} do Posto ${postoNumero}`);
   };
 
   if (authLoading || loading) {

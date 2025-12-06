@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "../../components/Navbar";
 import { FormGVC } from "../../components/GVC/FormGVC";
 import { ListaGVCTable } from "../../components/GVC/ListarGVCTable";
@@ -7,17 +8,16 @@ import {
   criarGVC,
   obterGVCs,
   atualizarGVC,
-  deletarGVC,
-  toggleStatusGVC,
 } from "../../services/gvcService";
+import { Users, Plus } from "lucide-react";
 
 export const ListarGVC = () => {
   const [gvcs, setGvcs] = useState<GVC[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [gvcEmEdicao, setGvcEmEdicao] = useState<GVC | undefined>();
+  const navigate = useNavigate();
 
-  // Carregar GVCs ao montar a página
   useEffect(() => {
     carregarGVCs();
   }, []);
@@ -39,15 +39,9 @@ export const ListarGVC = () => {
     setIsFormOpen(true);
   };
 
-  const handleEditarGVC = (gvc: GVC) => {
-    setGvcEmEdicao(gvc);
-    setIsFormOpen(true);
-  };
-
   const handleSubmitForm = async (formData: Omit<GVC, "id">) => {
     try {
       if (gvcEmEdicao?.id) {
-        // Atualizar GVC existente
         await atualizarGVC(gvcEmEdicao.id, formData);
         setGvcs((prev) =>
           prev.map((gvc) =>
@@ -55,7 +49,6 @@ export const ListarGVC = () => {
           )
         );
       } else {
-        // Criar novo GVC
         const novoGVC = await criarGVC(formData);
         setGvcs((prev) => [novoGVC, ...prev]);
       }
@@ -65,97 +58,77 @@ export const ListarGVC = () => {
     }
   };
 
-  const handleDeletarGVC = (gvc: GVC) => {
-    if (!gvc.id) return;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Navbar />
 
-    if (window.confirm(`Tem certeza que deseja deletar ${gvc.nome}?`)) {
-      deletarGVC(gvc.id)
-        .then(() => {
-          setGvcs((prev) => prev.filter((g) => g.id !== gvc.id));
-        })
-        .catch((error) => {
-          console.error("Erro ao deletar GVC:", error);
-        });
-    }
-  };
+      <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+        {/* Header Simplificado */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Users className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+                    Guarda-Vidas (GVC)
+                  </h1>
+                  <p className="text-blue-100 text-sm">
+                    Gerenciamento de efetivo operacional
+                  </p>
+                </div>
+              </div>
 
-  const handleToggleStatusGVC = (gvc: GVC) => {
-    if (!gvc.id) return;
+              <button
+                type="button"
+                onClick={handleAdicionarGVC}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#1E3A5F] rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <Plus className="w-5 h-5" />
+                Novo GVC
+              </button>
+            </div>
 
-    toggleStatusGVC(gvc.id, gvc.status)
-      .then((novoStatus) => {
-        setGvcs((prev) =>
-          prev.map((g) =>
-            g.id === gvc.id
-              ? { ...g, status: novoStatus as "ativo" | "inativo" }
-              : g
-          )
-        );
-      })
-      .catch((error) => {
-        console.error("Erro ao alterar status:", error);
-      });
-  };
 
- return (
-  <div className="min-h-screen bg-gray-50">
-    <Navbar />
-
-    <div className="px-6 py-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-          <div className="flex flex-col items-start gap-1">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Guarda-Vidas (GVC)
-            </h1>
-            <p className="text-gray-600">
-              Gerencie todos os guarda-vidas do sistema
-            </p>
           </div>
-
-          <button
-            type="button"
-            onClick={handleAdicionarGVC}
-            className="inline-flex items-center justify-center px-5 py-3 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Novo GVC
-          </button>
         </div>
 
         {/* Conteúdo */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="mx-auto mb-4 w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600">Carregando GVCs...</p>
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="mx-auto mb-4 w-12 h-12 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-gray-600 text-sm">Carregando GVCs...</p>
+            </div>
           </div>
         ) : (
-          <ListaGVCTable
-            gvcs={gvcs}
-            onEdit={handleEditarGVC}
-            onDelete={handleDeletarGVC}
-            onToggleStatus={handleToggleStatusGVC}
-          />
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <ListaGVCTable
+              gvcs={gvcs}
+              totalGvcs={gvcs.length}
+              onNavigateToDetails={(gvcId) => navigate(`/gvcs/${gvcId}`)}
+            />
+          </div>
         )}
       </div>
-    </div>
 
-    {/* Modal do Formulário */}
-    <FormGVC
-      isOpen={isFormOpen}
-      onClose={() => {
-        setIsFormOpen(false);
-        setGvcEmEdicao(undefined);
-      }}
-      onSubmit={handleSubmitForm}
-      gvcInicial={gvcEmEdicao}
-      isEditing={!!gvcEmEdicao?.id}
-      permitirCadastroEmLote={!gvcEmEdicao?.id}
-      onNovoGVCAdicionado={() => {
-        // Recarregar lista após adicionar novo GVC
-        carregarGVCs();
-      }}
-    />
-  </div>
-);
+      {/* Modal do Formulário */}
+      <FormGVC
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setGvcEmEdicao(undefined);
+        }}
+        onSubmit={handleSubmitForm}
+        gvcInicial={gvcEmEdicao}
+        isEditing={!!gvcEmEdicao?.id}
+        permitirCadastroEmLote={!gvcEmEdicao?.id}
+        onNovoGVCAdicionado={() => {
+          carregarGVCs();
+        }}
+      />
+    </div>
+  );
 };

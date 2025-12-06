@@ -1,4 +1,4 @@
-import { Package, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import type { Cautela } from '../../../types/cautelas';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,59 +13,50 @@ export const CautelasCard = ({ cautelas, gvcNome }: Props) => {
 
   if (cautelasAtivas.length === 0) {
     return (
-      <div className="border-l-4 border-gray-300 bg-gray-50 p-4 rounded-r-lg">
-        <div className="flex items-center gap-3">
-          <Package className="w-5 h-5 text-gray-500" />
-          <div>
-            <h3 className="font-semibold text-gray-700">Sem Cautelas Ativas</h3>
-            <p className="text-sm text-gray-600">{gvcNome} não possui itens cautelados no momento.</p>
-          </div>
-        </div>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Equipamentos Cautelados</h3>
+        <p className="text-sm text-gray-600">{gvcNome} não possui itens cautelados no momento.</p>
       </div>
     );
   }
 
   return (
-    <div className="border-l-4 border-blue-500 bg-white rounded-r-lg">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <Package className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-900">
-            Cautelas Ativas ({cautelasAtivas.length})
-          </h3>
-        </div>
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Equipamentos Cautelados
+          <span className="ml-2 text-gray-500 font-normal">({cautelasAtivas.length})</span>
+        </h3>
       </div>
 
-      <div className="p-4">
+      <div className="p-6">
         {cautelasAtivas.map((cautela) => (
-          <div key={cautela.id} className="mb-4 last:mb-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div key={cautela.id} className="mb-6 last:mb-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {cautela.itensAtivos.map((item, index) => (
                 <div
                   key={item.id || index}
-                  className="p-3 rounded-lg bg-blue-50 border border-blue-200"
+                  className="p-4 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-900">{item.item}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-0.5 rounded bg-white text-gray-700">
-                          {item.tamanho}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          item.condicao === 'Bom'
-                            ? 'bg-green-100 text-green-800'
-                            : item.condicao === 'Regular'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.condicao}
-                        </span>
-                      </div>
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">{item.item}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-700">
+                        Tam. {item.tamanho}
+                      </span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        item.condicao === 'Bom'
+                          ? 'bg-gray-900 text-white'
+                          : item.condicao === 'Regular'
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'bg-gray-200 text-gray-900'
+                      }`}>
+                        {item.condicao}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
-                    <Clock className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <Clock className="w-3.5 h-3.5" />
                     {formatDistanceToNow(item.dataEmprestimo.toDate(), {
                       addSuffix: true,
                       locale: ptBR,

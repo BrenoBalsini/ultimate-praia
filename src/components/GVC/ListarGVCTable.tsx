@@ -1,35 +1,25 @@
 import React, { useMemo } from "react";
 import { type GVC } from "../../services/gvcService";
-import { Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Search, ChevronRight, Users } from "lucide-react";
 
 interface ListaGVCTableProps {
   gvcs: GVC[];
-  onEdit: (gvc: GVC) => void;
-  onDelete: (gvc: GVC) => void;
-  onToggleStatus: (gvc: GVC) => void;
+  totalGvcs: number;
+  onNavigateToDetails: (gvcId: string) => void;
 }
 
 type SortBy = "posicao" | "alfabetica";
 
-export const ListaGVCTable = ({
-  gvcs,
-  onEdit,
-  onDelete,
-  onToggleStatus,
-}: ListaGVCTableProps) => {
+export const ListaGVCTable = ({ gvcs, totalGvcs, onNavigateToDetails }: ListaGVCTableProps) => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [sortBy, setSortBy] = React.useState<SortBy>("posicao");
-  const navigate = useNavigate();
 
-  // Filtrar por nome/sobrenome
   const gvcsFiltrados = useMemo(() => {
     return gvcs.filter((gvc) =>
       gvc.nome.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [gvcs, searchTerm]);
 
-  // Ordenar por posição ou alfabética
   const gvcsOrdenados = useMemo(() => {
     const copia = [...gvcsFiltrados];
     if (sortBy === "posicao") {
@@ -39,94 +29,62 @@ export const ListaGVCTable = ({
     }
   }, [gvcsFiltrados, sortBy]);
 
-  // Card component para mobile
+  // Card para Mobile
   const GVCCard = ({ gvc }: { gvc: GVC }) => (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start gap-2 mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-block w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">
-              {gvc.posicao}º
-            </span>
-            <h3 className="font-semibold text-gray-900 line-clamp-1">
+    <button
+      onClick={() => onNavigateToDetails(gvc.id!)}
+      className="w-full bg-white border border-gray-200 rounded-xl p-4 hover:border-[#1E3A5F] hover:shadow-md transition-all text-left group"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-[#1E3A5F] text-white font-bold flex items-center justify-center text-sm flex-shrink-0">
+            {gvc.posicao}º
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 truncate group-hover:text-[#1E3A5F] transition-colors">
               {gvc.nome}
             </h3>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            {gvc.status === "ativo" ? (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                <CheckCircle size={14} />
-                Ativo
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
+                gvc.status === "ativo"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-gray-200 text-gray-700"
+              }`}>
+                {gvc.status === "ativo" ? "Ativo" : "Inativo"}
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                <XCircle size={14} />
-                Inativo
-              </span>
-            )}
+            </div>
           </div>
         </div>
+        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#1E3A5F] transition-colors flex-shrink-0" />
       </div>
-
-      {/* Ações */}
-      <div className="flex gap-2 pt-3 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={() => onEdit(gvc)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-        >
-          <Edit size={16} />
-          <span className="hidden sm:inline">Editar</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onToggleStatus(gvc)}
-          className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-            gvc.status === "ativo"
-              ? "text-orange-600 hover:bg-orange-50"
-              : "text-green-600 hover:bg-green-50"
-          }`}
-        >
-          {gvc.status === "ativo" ? (
-            <>
-              <XCircle size={16} />
-              <span className="hidden sm:inline">Desativar</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle size={16} />
-              <span className="hidden sm:inline">Ativar</span>
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(gvc)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
-        >
-          <Trash2 size={16} />
-          <span className="hidden sm:inline">Deletar</span>
-        </button>
-      </div>
-    </div>
+    </button>
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Controles de Filtro e Ordenação */}
-      <div className="flex flex-col gap-3">
-        <input
-          placeholder="Buscar por nome..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-700 whitespace-nowrap">
-            Ordenar:
-          </span>
+    <div className="flex flex-col">
+      {/* Controles */}
+      <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="text-sm text-gray-600">
+            Total: <strong className="text-gray-900 font-semibold">{totalGvcs}</strong> GVCs cadastrados
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Busca */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              placeholder="Buscar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] bg-white"
+            />
+          </div>
+
+          {/* Ordenação */}
           <select
-            className="flex-1 px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white min-w-[160px]"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
           >
@@ -136,85 +94,70 @@ export const ListaGVCTable = ({
         </div>
       </div>
 
-      {/* Cards (Mobile) ou Tabela (Desktop) */}
+      {/* Conteúdo */}
       {gvcsOrdenados.length > 0 ? (
         <>
-          {/* Mobile: Grid de Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-3">
+          {/* Mobile: Cards */}
+          <div className="lg:hidden p-4 space-y-3">
             {gvcsOrdenados.map((gvc) => (
               <GVCCard key={gvc.id} gvc={gvc} />
             ))}
           </div>
 
           {/* Desktop: Tabela */}
-          <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-lg">
-            <table className="w-full border-collapse">
+          <div className="hidden lg:block overflow-x-auto">
+            <table className="w-full">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200">
-                  <th className="px-3 py-3 text-center font-bold w-20">
+                <tr className="bg-[#1E3A5F] text-white">
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                     Posição
                   </th>
-                  <th className="px-3 py-3 text-left font-bold">Nome</th>
-                  <th className="px-3 py-3 text-left font-bold">Status</th>
-                  <th className="px-3 py-3 text-center font-bold">Ações</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                    Nome Completo
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider">
+                    Ação
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {gvcsOrdenados.map((gvc) => (
+              <tbody className="divide-y divide-gray-200">
+                {gvcsOrdenados.map((gvc, index) => (
                   <tr
                     key={gvc.id}
-                    className="border-b border-gray-200 bg-white hover:bg-gray-50"
+                    className={`hover:bg-gray-50 transition-colors ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                    }`}
                   >
-                    <td className="px-3 py-3 text-center font-bold text-base">
-                      {gvc.posicao}º
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => navigate(`/gvcs/${gvc.id}`)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-left"
-                      >
-                        {gvc.nome}
-                      </button>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          gvc.status === "ativo"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {gvc.status === "ativo" ? "✓ Ativo" : "✗ Inativo"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#1E3A5F] text-white font-bold text-sm">
+                        {gvc.posicao}
                       </span>
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onEdit(gvc)}
-                          className="px-2 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onToggleStatus(gvc)}
-                          className={`px-2 py-1 text-sm rounded-md transition-colors ${
-                            gvc.status === "ativo"
-                              ? "text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                              : "text-green-600 hover:text-green-700 hover:bg-green-50"
-                          }`}
-                        >
-                          {gvc.status === "ativo" ? "Desativar" : "Ativar"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(gvc)}
-                          className="px-2 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-                        >
-                          Deletar
-                        </button>
-                      </div>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900">{gvc.nome}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          gvc.status === "ativo"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {gvc.status === "ativo" ? "Ativo" : "Inativo"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => onNavigateToDetails(gvc.id!)}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-[#1E3A5F] hover:text-[#2C5282] transition-colors"
+                      >
+                        Ver Detalhes
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -223,20 +166,30 @@ export const ListaGVCTable = ({
           </div>
         </>
       ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-500">
+        <div className="text-center py-16 px-4">
+          <div className="text-gray-400 mb-3">
+            <Users className="w-16 h-16 mx-auto" />
+          </div>
+          <p className="text-gray-600 font-medium mb-1">
+            {searchTerm ? "Nenhum GVC encontrado" : "Nenhum GVC cadastrado"}
+          </p>
+          <p className="text-sm text-gray-500">
             {searchTerm
-              ? "Nenhum GVC encontrado com esse nome"
-              : "Nenhum GVC cadastrado ainda"}
+              ? "Tente outro termo de busca"
+              : "Clique em 'Novo GVC' para começar"}
           </p>
         </div>
       )}
 
-      {/* Resumo */}
-      <p className="text-sm text-gray-600">
-        Total: <strong>{gvcsOrdenados.length}</strong> GVCs
-        {searchTerm && ` (filtrados de ${gvcs.length})`}
-      </p>
+      {/* Rodapé - apenas se houver filtro */}
+      {searchTerm && gvcsOrdenados.length > 0 && (
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            Exibindo <strong className="text-gray-900">{gvcsOrdenados.length}</strong> de{" "}
+            <strong className="text-gray-900">{totalGvcs}</strong> GVCs
+          </p>
+        </div>
+      )}
     </div>
   );
 };

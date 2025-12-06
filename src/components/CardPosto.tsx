@@ -1,4 +1,5 @@
 import type { POSTOS_FIXOS, StatusMaterialA } from '../types/postos';
+import { ChevronRight } from 'lucide-react';
 
 interface CardPostoProps {
   postoNumero: (typeof POSTOS_FIXOS)[number];
@@ -39,35 +40,30 @@ export const CardPosto = ({
     if (material === 'alteracoes') {
       return temAlteracoesPendentes
         ? 'bg-yellow-500 hover:bg-yellow-600'
-        : 'bg-green-500 hover:bg-green-600';
+        : 'bg-emerald-500 hover:bg-emerald-600';
     }
 
-    return 'bg-green-500 hover:bg-green-600';
+    return 'bg-emerald-500 hover:bg-emerald-600';
   };
 
   const corMaterialA = (status: StatusMaterialA) => {
     switch (status) {
       case 'ausente':
-        return 'bg-gray-400';
+        return 'bg-gray-400 hover:bg-gray-500';
       case 'ok':
-        return 'bg-green-500 hover:bg-green-600';
+        return 'bg-emerald-500 hover:bg-emerald-600';
       case 'avaria':
         return 'bg-yellow-500 hover:bg-yellow-600';
       case 'quebrado':
         return 'bg-red-500 hover:bg-red-600';
       default:
-        return 'bg-gray-400';
+        return 'bg-gray-400 hover:bg-gray-500';
     }
   };
 
   const corMaterialBTipo = (status: 'ok' | 'falta') => {
-    if (status === 'ok') return 'bg-green-500 hover:bg-green-600';
+    if (status === 'ok') return 'bg-emerald-500 hover:bg-emerald-600';
     return 'bg-yellow-500 hover:bg-yellow-600';
-  };
-
-  const getBadgeCount = (_material: string) => {
-    // por enquanto 0; depois podemos colocar contagem de faltas/pendências
-    return 0;
   };
 
   const MaterialButton = ({
@@ -79,45 +75,47 @@ export const CardPosto = ({
     icon: string;
     label: string;
   }) => {
-    const badgeCount = getBadgeCount(material);
-
     return (
       <button
         onClick={() => onMaterialClick(material)}
         disabled={!ativo}
         className={`
-          relative rounded-lg p-4 sm:p-6 text-white font-medium transition-all
+          relative rounded-xl p-4 text-white font-semibold transition-all
           flex flex-col items-center justify-center gap-2
-          min-h-[100px] sm:min-h-[120px]
-          ${ativo ? getBgColor(material) : 'bg-gray-400 cursor-not-allowed opacity-60'}
-          ${ativo ? 'active:scale-95' : ''}
+          min-h-[100px] group
+          ${ativo ? getBgColor(material) : 'bg-gray-300 cursor-not-allowed opacity-60'}
+          ${ativo ? 'active:scale-95 shadow-md hover:shadow-lg' : ''}
         `}
       >
-        <span className="text-2xl sm:text-3xl">{icon}</span>
-        <span className="text-xs sm:text-sm text-center">{label}</span>
-
-        {badgeCount > 0 && ativo && (
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
-            {badgeCount}
-          </div>
+        <span className="text-3xl">{icon}</span>
+        <span className="text-xs text-center leading-tight">{label}</span>
+        {ativo && (
+          <ChevronRight className="w-4 h-4 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
       </button>
     );
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-md p-4 sm:p-6 ${!ativo ? 'opacity-70' : ''}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg sm:text-xl font-bold text-gray-800">Posto {postoNumero}</h3>
+    <div className={`bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-6 transition-all ${
+      !ativo ? 'opacity-70' : 'hover:shadow-xl'
+    }`}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] flex items-center justify-center">
+            <span className="text-white font-bold text-lg">{postoNumero}</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Posto {postoNumero}</h3>
+        </div>
 
         <button
           onClick={onToggleAtivo}
           className={`
-            px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors
+            px-4 py-2 rounded-xl text-sm font-semibold transition-all
             ${
               ativo
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }
           `}
         >
@@ -125,7 +123,7 @@ export const CardPosto = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <MaterialButton material="binoculo" icon="🔭" label="Binóculo" />
         <MaterialButton material="guardassol" icon="☂️" label="Guarda-sol" />
         <MaterialButton material="radio" icon="📻" label="Rádio" />

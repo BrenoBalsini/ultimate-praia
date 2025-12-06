@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { X, Plus, Trash2, Package } from 'lucide-react';
 import type { CategoriaMaterialB } from '../../types/postos';
 import {
   listarMateriaisTipoB,
@@ -41,7 +42,7 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
       });
       setMateriais(lista);
     } catch (error) {
-      console.error('Erro ao carregar materiais tipo B:', error);
+      console.error('Erro ao carregar materiais:', error);
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
       setNovoNome('');
       await carregar();
     } catch (error) {
-      console.error('Erro ao adicionar material tipo B:', error);
+      console.error('Erro ao adicionar material:', error);
     } finally {
       setSaving(false);
     }
@@ -78,106 +79,181 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
       await removerMaterialTipoB(id);
       await carregar();
     } catch (error) {
-      console.error('Erro ao remover material tipo B:', error);
+      console.error('Erro ao remover material:', error);
     }
   };
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
-        {/* Cabeçalho */}
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-            Lista de Materiais (Tipo B)
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-800 transition-colors text-sm"
-          >
-            Fechar
-          </button>
-        </div>
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+        onClick={onClose}
+      />
 
-        {/* Conteúdo */}
-        <div className="px-4 sm:px-6 py-4 overflow-y-auto flex-1">
-          {/* Formulário de novo material */}
-          <div className="mb-4 space-y-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                placeholder="Nome do material (ex: Gaze, Vassoura...)"
-                value={novoNome}
-                onChange={(e) => setNovoNome(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <select
-                value={novaCategoria}
-                onChange={(e) => setNovaCategoria(e.target.value as CategoriaMaterialB)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden pointer-events-auto flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] px-6 py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">
+                  Lista de Materiais
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors"
+                title="Fechar (ESC)"
               >
-                <option value="whitemed">Whitemed</option>
-                <option value="bolsa_aph">Bolsa APH</option>
-                <option value="limpeza">Limpeza</option>
-              </select>
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={handleAdicionar}
-              disabled={saving || !novoNome.trim()}
-              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              {saving ? 'Adicionando...' : 'Adicionar Material'}
-            </button>
           </div>
 
-          <hr className="my-3" />
+          {/* Body */}
+          <div className="px-6 py-6 overflow-y-auto flex-1">
+            {/* Formulário de Adicionar */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Adicionar Novo Material
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Nome do Material
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Gaze, Vassoura, Álcool..."
+                    value={novoNome}
+                    onChange={(e) => setNovoNome(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && novoNome.trim()) {
+                        handleAdicionar();
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
+                  />
+                </div>
 
-          {/* Lista */}
-          {loading ? (
-            <p className="text-gray-600 text-sm">Carregando materiais...</p>
-          ) : materiais.length === 0 ? (
-            <p className="text-gray-600 text-sm">
-              Nenhum material cadastrado ainda. Use o campo acima para adicionar.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {(['whitemed', 'bolsa_aph', 'limpeza'] as CategoriaMaterialB[]).map(
-                (categoria) => {
-                  const daCategoria = materiais.filter(
-                    (m) => m.categoria === categoria,
-                  );
-                  if (daCategoria.length === 0) return null;
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Categoria
+                  </label>
+                  <select
+                    value={novaCategoria}
+                    onChange={(e) => setNovaCategoria(e.target.value as CategoriaMaterialB)}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors cursor-pointer"
+                  >
+                    <option value="whitemed">Whitemed</option>
+                    <option value="bolsa_aph">Bolsa</option>
+                    <option value="limpeza">Limpeza</option>
+                  </select>
+                </div>
 
-                  return (
-                    <div key={categoria}>
-                      <h3 className="text-sm font-semibold text-gray-800 mb-1">
-                        {CATEGORIAS_LABEL[categoria]}
-                      </h3>
-                      <ul className="space-y-1">
-                        {daCategoria.map((m) => (
-                          <li
-                            key={m.id}
-                            className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
-                          >
-                            <span className="text-sm text-gray-800">{m.nome}</span>
-                            <button
-                              onClick={() => handleRemover(m.id)}
-                              className="text-xs text-red-600 hover:text-red-800"
-                            >
-                              Remover
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                },
+                <button
+                  onClick={handleAdicionar}
+                  disabled={saving || !novoNome.trim()}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] text-white text-sm font-semibold hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  {saving ? 'Adicionando...' : 'Adicionar Material'}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de Materiais */}
+            <div>
+              <h3 className="text-base font-bold text-gray-900 mb-4">
+                Materiais Cadastrados
+              </h3>
+
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="mx-auto mb-3 w-10 h-10 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-gray-600">Carregando materiais...</p>
+                </div>
+              ) : materiais.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-200 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600 font-medium mb-1">
+                    Nenhum material cadastrado
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Use o formulário acima para adicionar materiais
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {(['whitemed', 'bolsa_aph', 'limpeza'] as CategoriaMaterialB[]).map(
+                    (categoria) => {
+                      const daCategoria = materiais.filter(
+                        (m) => m.categoria === categoria,
+                      );
+                      if (daCategoria.length === 0) return null;
+
+                      return (
+                        <div key={categoria}>
+                          <div className="flex items-center gap-2 mb-3">
+                            
+                            <h4 className="text-md font-bold text-gray-800">
+                              {CATEGORIAS_LABEL[categoria]}
+                            </h4>
+                            <span className="ml-auto text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                              {daCategoria.length} {daCategoria.length === 1 ? 'item' : 'itens'}
+                            </span>
+                          </div>
+                          <ul className="space-y-2">
+                            {daCategoria.map((m) => (
+                              <li
+                                key={m.id}
+                                className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300 transition-colors group"
+                              >
+                                <span className="text-sm text-gray-900">
+                                  {m.nome}
+                                </span>
+                                <button
+                                  onClick={() => handleRemover(m.id)}
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Remover
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
               )}
             </div>
-          )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
+            <button
+              onClick={onClose}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
