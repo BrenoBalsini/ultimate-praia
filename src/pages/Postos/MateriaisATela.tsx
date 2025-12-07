@@ -30,6 +30,10 @@ import {
   type HistoricoDoc,
 } from "../../services/historicoService";
 import { TipoEvento } from "../../types/postos";
+import {
+  formatarLabelMaterial,
+  formatarDataMaterial,
+} from "../../utils/formatarDataMaterial";
 
 const LABEL_POR_TIPO: Record<TipoMaterialA, string> = {
   binoculo: "Binóculo",
@@ -342,7 +346,8 @@ export const MateriaisATela = () => {
       try {
         setLoading(true);
         const dados = await getMateriaisAByPostoAndTipo(postoNumero, tipo);
-        dados.sort((a, b) => a.numero - b.numero);
+        // ✅ Ordena por data (número agora é timestamp)
+        dados.sort((a, b) => b.numero - a.numero); // Mais recente primeiro
         setMateriais(dados);
       } catch (error) {
         console.error("Erro ao carregar materiais:", error);
@@ -390,7 +395,8 @@ export const MateriaisATela = () => {
         if (!grupos[chave]) {
           grupos[chave] = {
             chave,
-            titulo: `${LABEL_POR_TIPO[tipo]} #${evento.materialANumero}`,
+            // ✅ Usa função para formatar com data
+            titulo: formatarLabelMaterial(tipo, evento.materialANumero),
             icone: ICONE_POR_TIPO[tipo],
             eventos: [],
           };
@@ -416,7 +422,7 @@ export const MateriaisATela = () => {
 
   const recarregar = async () => {
     const dados = await getMateriaisAByPostoAndTipo(postoNumero, tipo);
-    dados.sort((a, b) => a.numero - b.numero);
+    dados.sort((a, b) => b.numero - a.numero);
     setMateriais(dados);
 
     const eventos = await buscarHistorico();
@@ -457,7 +463,7 @@ export const MateriaisATela = () => {
 
           const lista = await getMateriaisAByPostoAndTipo(postoNumero, tipo);
           const material = lista.find((m) => m.id === id);
-          const numero = material?.numero ?? lista.length;
+          const numero = material?.numero ?? Date.now();
 
           await registrarEventoMaterialA({
             tipoEvento: TipoEvento.MATERIAL_A_ADICIONADO,
@@ -570,7 +576,11 @@ export const MateriaisATela = () => {
   const handleDeletar = (id: string, numero: number) => {
     abrirModal({
       titulo: "Deletar Material Permanentemente",
-      mensagem: `Tem certeza que deseja DELETAR o ${LABEL_POR_TIPO[tipo]} #${numero}?\n\n⚠️ Esta ação não pode ser desfeita!\n\nO material será removido permanentemente do sistema, mas o histórico será preservado para registro.`,
+      // ✅ Mostra data no modal de deletar
+      mensagem: `Tem certeza que deseja DELETAR o ${formatarLabelMaterial(
+        tipo,
+        numero
+      )}?\n\n⚠️ Esta ação não pode ser desfeita!\n\nO material será removido permanentemente do sistema, mas o histórico será preservado para registro.`,
       tipo: "deletar",
       temObservacao: true,
       onConfirm: async (obsDigitada) => {
@@ -667,32 +677,36 @@ export const MateriaisATela = () => {
                 </p>
               </div>
             ) : (
-              materiais.map((m) => (
+              materiais.map((material, index) => (
                 <div
-                  key={m.id}
+                  key={material.id}
                   className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-5 hover:shadow-xl transition-all"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
+                      {/* ✅ MUDANÇA: Mostra índice + 1 */}
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">
-                          {m.numero}
+                        <span className="text-white font-bold text-lg">
+                          {index + 1}
                         </span>
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-gray-900">
-                          {LABEL_POR_TIPO[tipo]} #{m.numero}
+                          {formatarLabelMaterial(
+                            material.tipo,
+                            material.numero
+                          )}
                         </h3>
                         <span
                           className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                            COR_STATUS[m.status]
+                            COR_STATUS[material.status]
                           }`}
                         >
-                          {m.status === "ok"
+                          {material.status === "ok"
                             ? "OK"
-                            : m.status === "avaria"
+                            : material.status === "avaria"
                             ? "Avaria"
-                            : m.status === "quebrado"
+                            : material.status === "quebrado"
                             ? "Quebrado"
                             : "Ausente"}
                         </span>
@@ -700,7 +714,9 @@ export const MateriaisATela = () => {
                     </div>
 
                     <button
-                      onClick={() => handleDeletar(m.id, m.numero)}
+                      onClick={() =>
+                        handleDeletar(material.id, material.numero)
+                      }
                       className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-700 hover:bg-red-50 transition-colors"
                       title="Deletar permanentemente"
                     >
@@ -708,7 +724,7 @@ export const MateriaisATela = () => {
                     </button>
                   </div>
 
-                  {m.observacao && (
+                  {material.observacao && (
                     <div className="mb-3 flex items-start gap-2 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
                       <AlertCircle className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
                       <p
@@ -718,32 +734,32 @@ export const MateriaisATela = () => {
                           overflowWrap: "anywhere",
                         }}
                       >
-                        {m.observacao}
+                        {material.observacao}
                       </p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => handleMudarStatus(m.id, "avaria")}
+                      onClick={() => handleMudarStatus(material.id, "avaria")}
                       className="px-3 py-2 text-xs font-medium rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
                     >
                       Avaria
                     </button>
                     <button
-                      onClick={() => handleMudarStatus(m.id, "quebrado")}
+                      onClick={() => handleMudarStatus(material.id, "quebrado")}
                       className="px-3 py-2 text-xs font-medium rounded-lg bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
                     >
                       Quebrado
                     </button>
                     <button
-                      onClick={() => handleMudarStatus(m.id, "ok")}
+                      onClick={() => handleMudarStatus(material.id, "ok")}
                       className="px-3 py-2 text-xs font-medium rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors"
                     >
                       OK
                     </button>
                     <button
-                      onClick={() => handleDevolver(m.id)}
+                      onClick={() => handleDevolver(material.id)}
                       className="px-3 py-2 text-xs font-medium rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
                     >
                       Devolver

@@ -64,58 +64,60 @@ export const TabPostos = () => {
       return;
     }
 
-    const loadPostos = async () => {
-      if (authLoading) {
-        return;
-      }
+const loadPostos = async () => {
+    try {
+      await initPostosIfNeeded();
 
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        await initPostosIfNeeded();
+      // ✅ PARALELIZA todas as chamadas
+      const resultados = await Promise.all(
+        POSTOS_FIXOS.map(async (numero) => {
+          const [posto, statusAposto, statusBposto, temAlt] = await Promise.all([
+            getPostoByNumero(numero as NumeroPosto),
+            calcularStatusMateriaisAParaPosto(numero as NumeroPosto),
+            calcularStatusMateriaisBParaPosto(numero as NumeroPosto),
+            temAlteracoesPendentes(numero as NumeroPosto),
+          ]);
 
-        const estados: Record<number, boolean> = {};
-        const statusA: StatusMateriaisAByPosto = {};
-        const statusB: StatusMateriaisBByPosto = {};
-        const altPend: AlteracoesByPosto = {};
-
-        for (const numero of POSTOS_FIXOS) {
-          const posto = await getPostoByNumero(numero as NumeroPosto);
-          estados[numero] = posto?.ativo ?? true;
-
-          const statusAposto = await calcularStatusMateriaisAParaPosto(
-            numero as NumeroPosto
-          );
-          statusA[numero] = {
-            binoculo: statusAposto.binoculo,
-            guardassol: statusAposto.guardassol,
-            radio: statusAposto.radio,
+          return {
+            numero,
+            ativo: posto?.ativo ?? true,
+            statusA: {
+              binoculo: statusAposto.binoculo,
+              guardassol: statusAposto.guardassol,
+              radio: statusAposto.radio,
+            },
+            statusB: statusBposto,
+            alteracoes: temAlt,
           };
+        })
+      );
 
-          const statusBposto = await calcularStatusMateriaisBParaPosto(
-            numero as NumeroPosto
-          );
-          statusB[numero] = statusBposto;
+      // Montar os objetos de estado
+      const estados: Record<number, boolean> = {};
+      const statusA: StatusMateriaisAByPosto = {};
+      const statusB: StatusMateriaisBByPosto = {};
+      const altPend: AlteracoesByPosto = {};
 
-          const temAlt = await temAlteracoesPendentes(numero as NumeroPosto);
-          altPend[numero] = temAlt;
-        }
+      resultados.forEach((res) => {
+        estados[res.numero] = res.ativo;
+        statusA[res.numero] = res.statusA;
+        statusB[res.numero] = res.statusB;
+        altPend[res.numero] = res.alteracoes;
+      });
 
-        setPostosAtivos(estados);
-        setStatusMateriaisA(statusA);
-        setStatusMateriaisB(statusB);
-        setAlteracoesPendentes(altPend);
-      } catch (error) {
-        console.error("Erro ao carregar postos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setPostosAtivos(estados);
+      setStatusMateriaisA(statusA);
+      setStatusMateriaisB(statusB);
+      setAlteracoesPendentes(altPend);
+    } catch (error) {
+      console.error("Erro ao carregar postos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadPostos();
-  }, [user, authLoading]);
+  loadPostos();
+}, [user, authLoading]);
 
   const handleToggleAtivo = async (postoNumero: number) => {
     try {

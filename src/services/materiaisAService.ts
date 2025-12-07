@@ -43,6 +43,7 @@ export const getMateriaisAByPostoAndTipo = async (
 };
 
 // Adiciona um novo material tipo A (ex: Binóculo 1 do Posto 2)
+// Adiciona um novo material tipo A (identificado pela data de criação)
 export const addMaterialA = async (params: {
   postoNumero: NumeroPosto;
   tipo: TipoMaterialA;
@@ -50,20 +51,17 @@ export const addMaterialA = async (params: {
 }): Promise<string> => {
   const { postoNumero, tipo, observacao } = params;
   const now = new Date().toISOString();
-
-  // descobrir o próximo número sequencial daquele tipo naquele posto
-  const existentes = await getMateriaisAByPostoAndTipo(postoNumero, tipo);
-  const proximoNumero =
-    existentes.length === 0
-      ? 1
-      : Math.max(...existentes.map((m) => m.numero)) + 1;
+  
+  // ✅ MUDANÇA: Usa timestamp como "numero" para identificação única
+  // Isso garante que nunca haverá duplicatas
+  const numeroUnico = Date.now(); // timestamp em milissegundos
 
   const docData: MaterialADoc = {
     tipo,
-    numero: proximoNumero,
+    numero: numeroUnico, // ← MUDOU: agora é timestamp
     postoNumero,
     status: 'ok' as StatusMaterialA,
-    observacao: observacao || undefined, // pode ser undefined
+    observacao: observacao || undefined,
     createdAt: now,
     updatedAt: now,
   };
@@ -71,6 +69,7 @@ export const addMaterialA = async (params: {
   const docRef = await addDoc(collection(db, COLLECTION_NAME), limparUndefined(docData));
   return docRef.id;
 };
+
 // Atualiza status e observação de um material A (avaria, quebrado, resolvido, etc)
 export const updateMaterialAStatus = async (params: {
   id: string;
