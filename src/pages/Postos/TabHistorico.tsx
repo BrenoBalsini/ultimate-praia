@@ -233,7 +233,7 @@ export const TabHistorico = () => {
         icone = icones[evento.materialATipo as TipoMaterialA];
         titulo = `${evento.materialATipo.charAt(0).toUpperCase() + evento.materialATipo.slice(1)} #${evento.materialANumero} - Posto ${evento.postoNumero}`;
       }
-      // Material Tipo B (whitemed, bolsa APH, limpeza)
+      // Material Tipo B (whitemed, bolsa APH, Outros)
       else if (evento.materialTipoBNome) {
         chave = `material-b-${evento.materialTipoBNome}-posto-${evento.postoNumero}`;
         icone = "⚠️";

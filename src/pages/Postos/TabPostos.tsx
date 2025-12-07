@@ -22,7 +22,7 @@ type MaterialKey =
   | "radio"
   | "whitemed"
   | "bolsaAph"
-  | "limpeza"
+  | "outros"
   | "alteracoes";
 
 interface StatusMateriaisAByPosto {
@@ -149,8 +149,8 @@ export const TabPostos = () => {
       navigate(`/postos/${postoNumero}/faltas/bolsa_aph`);
       return;
     }
-    if (material === "limpeza") {
-      navigate(`/postos/${postoNumero}/faltas/limpeza`);
+    if (material === "outros") {
+      navigate(`/postos/${postoNumero}/outros`)
       return;
     }
 
@@ -185,7 +185,7 @@ export const TabPostos = () => {
             statusRadio={statusMateriaisA[numero]?.radio ?? "ausente"}
             statusWhitemed={statusMateriaisB[numero]?.whitemed ?? "ok"}
             statusBolsaAph={statusMateriaisB[numero]?.bolsaAph ?? "ok"}
-            statusLimpeza={statusMateriaisB[numero]?.limpeza ?? "ok"}
+            statusOutros={statusMateriaisB[numero]?.outros ?? "ok"}
             temAlteracoesPendentes={alteracoesPendentes[numero] ?? false}
             onToggleAtivo={() => handleToggleAtivo(numero)}
             onMaterialClick={(material) =>

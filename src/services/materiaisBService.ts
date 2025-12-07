@@ -12,7 +12,7 @@ const COLLECTION_NAME = 'materiaisTipoB';
 
 export interface MaterialTipoBDoc {
   nome: string;
-  categoria: CategoriaMaterialB; // 'whitemed' | 'bolsa_aph' | 'limpeza'
+  categoria: CategoriaMaterialB; // 'whitemed' | 'bolsa_aph' | 'outros'
   createdAt: string;
 }
 

@@ -18,7 +18,7 @@ type MaterialTipoBItem = MaterialTipoBDoc & { id: string };
 const CATEGORIAS_LABEL: Record<CategoriaMaterialB, string> = {
   whitemed: 'Whitemed',
   bolsa_aph: 'Bolsa APH',
-  limpeza: 'Limpeza',
+  outros: 'outros',
 };
 
 export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProps) => {
@@ -157,7 +157,7 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
                   >
                     <option value="whitemed">Whitemed</option>
                     <option value="bolsa_aph">Bolsa</option>
-                    <option value="limpeza">Limpeza</option>
+                    <option value="outros">Outros</option>
                   </select>
                 </div>
 
@@ -197,7 +197,7 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {(['whitemed', 'bolsa_aph', 'limpeza'] as CategoriaMaterialB[]).map(
+                  {(['whitemed', 'bolsa_aph', 'outros'] as CategoriaMaterialB[]).map(
                     (categoria) => {
                       const daCategoria = materiais.filter(
                         (m) => m.categoria === categoria,
@@ -226,10 +226,9 @@ export const ModalListaMateriaisB = ({ open, onClose }: ModalListaMateriaisBProp
                                 </span>
                                 <button
                                   onClick={() => handleRemover(m.id)}
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 hover:text-red-700 transition-opacity"
                                 >
                                   <Trash2 className="w-3 h-3" />
-                                  Remover
                                 </button>
                               </li>
                             ))}

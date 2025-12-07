@@ -9,7 +9,7 @@ interface CardPostoProps {
   statusRadio: StatusMaterialA;
   statusWhitemed: 'ok' | 'falta';
   statusBolsaAph: 'ok' | 'falta';
-  statusLimpeza: 'ok' | 'falta';
+  statusOutros: 'ok' | 'falta';
   temAlteracoesPendentes: boolean;
   onToggleAtivo: () => void;
   onMaterialClick: (tipo: string) => void;
@@ -23,7 +23,7 @@ export const CardPosto = ({
   statusRadio,
   statusWhitemed,
   statusBolsaAph,
-  statusLimpeza,
+  statusOutros,
   temAlteracoesPendentes,
   onToggleAtivo,
   onMaterialClick,
@@ -35,7 +35,7 @@ export const CardPosto = ({
 
     if (material === 'whitemed') return corMaterialBTipo(statusWhitemed);
     if (material === 'bolsaAph') return corMaterialBTipo(statusBolsaAph);
-    if (material === 'limpeza') return corMaterialBTipo(statusLimpeza);
+   if (material === 'outros') return corMaterialBTipo(statusOutros);
 
     if (material === 'alteracoes') {
       return temAlteracoesPendentes
@@ -130,7 +130,7 @@ export const CardPosto = ({
 
         <MaterialButton material="whitemed" icon="💊" label="Whitemed" />
         <MaterialButton material="bolsaAph" icon="🩹" label="Bolsa APH" />
-        <MaterialButton material="limpeza" icon="🧹" label="Limpeza" />
+        <MaterialButton material="outros" icon="📦" label="Outros" />
 
         <MaterialButton material="alteracoes" icon="⚠️" label="Alterações" />
       </div>

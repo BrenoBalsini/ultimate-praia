@@ -17,7 +17,7 @@ import { TipoEvento } from '../../types/postos';
 const LABEL_CATEGORIA: Record<CategoriaMaterialB, string> = {
   whitemed: 'Whitemed',
   bolsa_aph: 'Bolsa APH',
-  limpeza: 'Limpeza',
+  outros: 'outros',
 };
 
 interface FaltaItem extends FaltaMaterialDoc {

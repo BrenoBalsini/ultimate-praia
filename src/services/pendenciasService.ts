@@ -27,7 +27,7 @@ export type Pendencia = PendenciaFalta | PendenciaAlteracao;
 // Busca todas as faltas em aberto (todas as categorias de todos os postos)
 export const buscarTodasFaltasAbertas = async (): Promise<PendenciaFalta[]> => {
   const todas: PendenciaFalta[] = [];
-  const categorias: CategoriaMaterialB[] = ['whitemed', 'bolsa_aph', 'limpeza'];
+  const categorias: CategoriaMaterialB[] = ['whitemed', 'bolsa_aph', 'outros'];
 
   for (const postoNumero of [1, 2, 3, 5, 6, 8, 10, 13, 16, 19]) {
     for (const categoria of categorias) {

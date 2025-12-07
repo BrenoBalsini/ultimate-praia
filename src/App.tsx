@@ -13,6 +13,7 @@ import { GlobalToaster } from "./components/ui/GlobalToaster";
 import { CautelasPage } from "./pages/Cautelas/CautelasPage";
 import { AlteracoesElogiosPage } from "./pages/Alteracoes/AlteracoesElogiosPage";
 import { DetalhesGVC } from "./pages/GVC/DetalhesGVC";
+import { OutrosTela } from "./pages/Postos/OutrosTela";
 
 function App() {
   return (
@@ -52,6 +53,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <PostosMateriais />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/postos/:postoNumero/outros"
+            element={
+              <ProtectedRoute>
+                <OutrosTela />
               </ProtectedRoute>
             }
           />

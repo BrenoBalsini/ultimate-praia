@@ -5,7 +5,7 @@ import { listarAlteracoesAbertasPorPosto } from '../services/alteracoesService';
 export interface ContadoresPendencias {
   whitemed: number;
   bolsaAph: number;
-  limpeza: number;
+  outros: number;
   alteracoes: number;
 }
 
@@ -15,19 +15,19 @@ export const buscarContadoresPendencias = async (
   const [
     whitemedFaltas,
     bolsaAphFaltas,
-    limpezaFaltas,
+    outrosFaltas,
     alteracoesPendentes,
   ] = await Promise.all([
     listarFaltasPorPostoECategoria(postoNumero, 'whitemed'),
     listarFaltasPorPostoECategoria(postoNumero, 'bolsa_aph'),
-    listarFaltasPorPostoECategoria(postoNumero, 'limpeza'),
+    listarFaltasPorPostoECategoria(postoNumero, 'outros'),
     listarAlteracoesAbertasPorPosto(postoNumero),
   ]);
 
   return {
     whitemed: whitemedFaltas.length,
     bolsaAph: bolsaAphFaltas.length,
-    limpeza: limpezaFaltas.length,
+    outros: outrosFaltas.length,
     alteracoes: alteracoesPendentes.length,
   };
 };

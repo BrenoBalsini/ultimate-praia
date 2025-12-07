@@ -11,7 +11,7 @@ import { POSTOS_FIXOS, type NumeroPosto } from '../../types/postos';
 const LABEL_CATEGORIA: Record<string, string> = {
   whitemed: 'Whitemed',
   bolsa_aph: 'Bolsa APH',
-  limpeza: 'Limpeza',
+  outros: 'Outros',
 };
 
 const ICONE_PENDENCIA = (pendencia: Pendencia) => {

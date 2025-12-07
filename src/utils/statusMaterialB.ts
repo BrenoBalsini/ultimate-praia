@@ -6,21 +6,21 @@ export type StatusTipoB = 'ok' | 'falta';
 export interface StatusMateriaisBTipo {
   whitemed: StatusTipoB;
   bolsaAph: StatusTipoB;
-  limpeza: StatusTipoB;
+  outros: StatusTipoB;
 }
 
 /**
- * Retorna se cada categoria (whitemed / bolsa_aph / limpeza) tem faltas abertas para determinado posto.
+ * Retorna se cada categoria (whitemed / bolsa_aph / Outros) tem faltas abertas para determinado posto.
  */
 export const calcularStatusMateriaisBParaPosto = async (
   postoNumero: NumeroPosto,
 ): Promise<StatusMateriaisBTipo> => {
-  const categorias: CategoriaMaterialB[] = ['whitemed', 'bolsa_aph', 'limpeza'];
+  const categorias: CategoriaMaterialB[] = ['whitemed', 'bolsa_aph', 'outros'];
 
   const resultado: StatusMateriaisBTipo = {
     whitemed: 'ok',
     bolsaAph: 'ok',
-    limpeza: 'ok',
+    outros: 'ok',
   };
 
   for (const categoria of categorias) {
@@ -29,7 +29,7 @@ export const calcularStatusMateriaisBParaPosto = async (
 
     if (categoria === 'whitemed') resultado.whitemed = temFalta ? 'falta' : 'ok';
     if (categoria === 'bolsa_aph') resultado.bolsaAph = temFalta ? 'falta' : 'ok';
-    if (categoria === 'limpeza') resultado.limpeza = temFalta ? 'falta' : 'ok';
+    if (categoria === 'outros') resultado.outros = temFalta ? 'falta' : 'ok';
   }
 
   return resultado;

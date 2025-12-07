@@ -24,7 +24,7 @@ export type TipoMaterialA = (typeof TipoMaterialA)[keyof typeof TipoMaterialA];
 export const CategoriaMaterialB = {
   WHITEMED: "whitemed",
   BOLSA_APH: "bolsa_aph",
-  LIMPEZA: "limpeza",
+  OUTROS: "outros",
 } as const;
 export type CategoriaMaterialB =
   (typeof CategoriaMaterialB)[keyof typeof CategoriaMaterialB];
@@ -36,12 +36,13 @@ export const TipoEvento = {
   MATERIAL_A_QUEBRADO: "material_a_quebrado",
   MATERIAL_A_RESOLVIDO: "material_a_resolvido",
   MATERIAL_A_DEVOLVIDO: "material_a_devolvido",
-  MATERIAL_A_DELETADO: 'material_a_deletado',
+  MATERIAL_A_DELETADO: "material_a_deletado",
   ALTERACAO_POSTO_ANDAMENTO: "alteracao_posto_andamento",
   FALTA_REGISTRADA: "falta_registrada",
   FALTA_RESOLVIDA: "falta_resolvida",
   ALTERACAO_ADICIONADA: "alteracao_adicionada",
   ALTERACAO_RESOLVIDA: "alteracao_resolvida",
+  OUTROS_ENTREGA_REGISTRADA: "outros_entrega_registrada",
 } as const;
 export type TipoEvento = (typeof TipoEvento)[keyof typeof TipoEvento];
 
@@ -117,6 +118,10 @@ export interface EventoHistorico {
   // Para alterações
   alteracaoPostoId?: string;
 
+  outrosEntregaId?: string;
+  outrosItemNome?: string;
+  outrosQuantidade?: number;
+
   observacao?: string;
   createdAt: Date;
 }
@@ -128,7 +133,7 @@ export interface StatusPosto {
   radio: StatusMaterialA;
   whitemed: "ok" | "falta";
   bolsaAph: "ok" | "falta";
-  limpeza: "ok" | "falta";
+  outros: "ok" | "falta";
   alteracoes: boolean; // true se tem alterações pendentes
 }
 
@@ -138,7 +143,7 @@ export interface ContadorPendencias {
   radio: number;
   whitemed: number;
   bolsaAph: number;
-  limpeza: number;
+  outros: number;
   alteracoes: number;
 }
 
