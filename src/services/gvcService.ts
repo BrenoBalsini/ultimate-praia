@@ -18,6 +18,7 @@ export interface GVC {
   status: 'ativo' | 'inativo';
   criadoEm?: Timestamp;
   atualizadoEm?: Timestamp;
+  postoFixo?: number
 }
 
 // Obter o próximo rank disponível

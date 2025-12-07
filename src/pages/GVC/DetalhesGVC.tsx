@@ -190,7 +190,6 @@ export const DetalhesGVC = () => {
               {/* Informações do GVC */}
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{gvc.nome}</h1>
-                    <span className="text-gray-600">{gvc.re}</span>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
  
 
