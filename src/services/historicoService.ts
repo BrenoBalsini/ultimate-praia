@@ -1,14 +1,20 @@
-import { collection, addDoc, query, orderBy, getDocs, limit } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import {
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  getDocs,
+  limit,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
 import type {
   NumeroPosto,
   TipoMaterialA,
   TipoEvento,
   CategoriaMaterialB,
+} from "../types/postos";
 
-} from '../types/postos';
-
-const COLLECTION_NAME = 'historico';
+const COLLECTION_NAME = "historico";
 
 export interface HistoricoDoc {
   id?: string;
@@ -29,6 +35,7 @@ export interface HistoricoDoc {
 
   // Alterações de Posto
   alteracaoPostoId?: string;
+  descricaoAlteracao?: string;
 }
 
 // Função auxiliar para limpar undefined dos dados
@@ -50,8 +57,14 @@ export const registrarEventoMaterialA = async (params: {
   materialANumero: number;
   observacao?: string;
 }) => {
-  const { tipoEvento, postoNumero, materialAId, materialATipo, materialANumero, observacao } =
-    params;
+  const {
+    tipoEvento,
+    postoNumero,
+    materialAId,
+    materialATipo,
+    materialANumero,
+    observacao,
+  } = params;
 
   const now = new Date().toISOString();
 
@@ -120,19 +133,43 @@ export const registrarEventoAlteracaoPosto = async (params: {
   await addDoc(collection(db, COLLECTION_NAME), limparUndefined(docData));
 };
 
-export const buscarHistorico = async (
+export const registrarAndamentoAlteracao = async (params: {
+  postoNumero: NumeroPosto;
+  alteracaoPostoId: string;
+  descricaoAlteracao: string;
+  observacao: string;
+}) => {
+  const { postoNumero, alteracaoPostoId, descricaoAlteracao, observacao } =
+    params;
+  const now = new Date().toISOString();
 
-  limite: number = 50,
+  const docData = {
+    tipo: "alteracao_posto_andamento",
+    postoNumero,
+    alteracaoPostoId,
+    descricaoAlteracao,
+    observacao,
+    createdAt: now,
+  };
+
+  await addDoc(collection(db, COLLECTION_NAME), limparUndefined(docData));
+};
+
+export const buscarHistorico = async (
+  limite: number = 50
 ): Promise<HistoricoDoc[]> => {
   let q = query(
     collection(db, COLLECTION_NAME),
-    orderBy('createdAt', 'desc'),
+    orderBy("createdAt", "desc"),
     limit(limite)
   );
 
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  }) as HistoricoDoc);
+  return snapshot.docs.map(
+    (d) =>
+      ({
+        id: d.id,
+        ...d.data(),
+      } as HistoricoDoc)
+  );
 };

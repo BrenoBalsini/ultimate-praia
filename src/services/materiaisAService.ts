@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   doc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import type { NumeroPosto, TipoMaterialA, StatusMaterialA } from '../types/postos';
@@ -105,4 +106,9 @@ export const devolverMaterialA = async (params: {
   };
 
   await updateDoc(ref, limparUndefined(updateData));
+};
+
+export const deletarMaterialA = async (id: string) => {
+  const materialRef = doc(db, COLLECTION_NAME, id);
+  await deleteDoc(materialRef);
 };
