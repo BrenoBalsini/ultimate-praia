@@ -32,7 +32,6 @@ import {
 import { TipoEvento } from "../../types/postos";
 import {
   formatarLabelMaterial,
-  formatarDataMaterial,
 } from "../../utils/formatarDataMaterial";
 
 const LABEL_POR_TIPO: Record<TipoMaterialA, string> = {
