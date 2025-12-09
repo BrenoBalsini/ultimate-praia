@@ -6,6 +6,8 @@ import {
   where,
   orderBy,
   Timestamp,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
@@ -28,16 +30,32 @@ export interface ItemOutroAgregado {
   ultimaObservacao?: string;
 }
 
+const limparUndefined = <T extends Record<string, any>>(obj: T): Partial<T> => {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+};
+
 // Registrar nova entrega
 export const registrarEntregaOutro = async (
   data: Omit<ItemOutro, "id" | "criadoEm">
 ): Promise<ItemOutro> => {
   try {
-    const docRef = await addDoc(collection(db, "outrosEntregas"), {
-      ...data,
+    const docData = limparUndefined({
+      postoNumero: data.postoNumero,
+      nomeItem: data.nomeItem,
+      quantidadeEntregue: data.quantidadeEntregue,
       dataEntrega: Timestamp.fromDate(data.dataEntrega),
+      observacao: data.observacao, // pode ser undefined, mas será removido
+      criadoPor: data.criadoPor,
       criadoEm: Timestamp.now(),
     });
+
+    const docRef = await addDoc(collection(db, "outrosEntregas"), docData);
 
     return {
       id: docRef.id,
@@ -184,5 +202,37 @@ export const obterUltimaEntregaItem = async (
   } catch (error) {
     console.error("Erro ao obter última entrega:", error);
     return null;
+  }
+};
+
+// Excluir uma entrega específica do histórico
+export const excluirEntrega = async (id: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, "outrosEntregas", id));
+  } catch (error) {
+    console.error("Erro ao excluir entrega:", error);
+    throw error;
+  }
+};
+
+// Limpar todo o histórico de um posto
+export const limparHistoricoPosto = async (postoNumero: number): Promise<void> => {
+  try {
+    const q = query(
+      collection(db, "outrosEntregas"),
+      where("postoNumero", "==", postoNumero)
+    );
+
+    const snapshot = await getDocs(q);
+    
+    // Excluir todos os documentos em batch
+    const deletePromises = snapshot.docs.map((doc) => 
+      deleteDoc(doc.ref)
+    );
+
+    await Promise.all(deletePromises);
+  } catch (error) {
+    console.error("Erro ao limpar histórico:", error);
+    throw error;
   }
 };

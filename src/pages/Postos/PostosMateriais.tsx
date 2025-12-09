@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, List, History, AlertTriangle } from "lucide-react";
+import { ArrowLeft, List, History } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
 import { TabPostos } from "./TabPostos";
 import { TabHistorico } from "./TabHistorico";
-import { TabAvisos } from "./TabAvisos";
 import { ModalListaMateriaisB } from "./ModalListaMateriaisB";
 
 export const PostosMateriais = () => {
@@ -97,10 +96,6 @@ export const PostosMateriais = () => {
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Avisos</span>
-                </div>
               </button>
             </nav>
           </div>
@@ -110,7 +105,6 @@ export const PostosMateriais = () => {
         <div>
           {activeTab === "postos" && <TabPostos />}
           {activeTab === "historico" && <TabHistorico />}
-          {activeTab === "avisos" && <TabAvisos />}
         </div>
       </div>
     </div>

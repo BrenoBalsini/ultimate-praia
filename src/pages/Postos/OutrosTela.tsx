@@ -9,11 +9,14 @@ import {
   obterItensAgregados,
   obterEntregasPosto,
   obterMateriaisOutros,
+  excluirEntrega,
+  limparHistoricoPosto,
   type ItemOutro,
   type ItemOutroAgregado,
 } from "../../services/outrosService";
 import { ArrowLeft, Plus, Package, History } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 export const OutrosTela = () => {
   const { postoNumero } = useParams<{ postoNumero: string }>();
@@ -43,14 +46,15 @@ export const OutrosTela = () => {
       const [agregados, historico, materiaisCadastrados] = await Promise.all([
         obterItensAgregados(Number(postoNumero)),
         obterEntregasPosto(Number(postoNumero)),
-        obterMateriaisOutros(), // ← MUDOU
+        obterMateriaisOutros(),
       ]);
 
       setItensAgregados(agregados);
       setHistoricoCompleto(historico);
-      setTodosItens(materiaisCadastrados); // ← Lista dos 5 materiais cadastrados
+      setTodosItens(materiaisCadastrados);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
+      toast.error("Erro ao carregar dados");
     } finally {
       setIsLoading(false);
     }
@@ -71,11 +75,37 @@ export const OutrosTela = () => {
         ...data,
       });
 
+      toast.success("Entrega registrada com sucesso!");
       await carregarDados();
       setIsFormOpen(false);
     } catch (error) {
       console.error("Erro ao registrar entrega:", error);
+      toast.error("Erro ao registrar entrega");
       throw error;
+    }
+  };
+
+  const handleExcluirEntrega = async (id: string) => {
+    try {
+      await excluirEntrega(id);
+      toast.success("Registro excluído com sucesso!");
+      await carregarDados();
+    } catch (error) {
+      console.error("Erro ao excluir entrega:", error);
+      toast.error("Erro ao excluir registro");
+    }
+  };
+
+  const handleLimparHistorico = async () => {
+    if (!postoNumero) return;
+
+    try {
+      await limparHistoricoPosto(Number(postoNumero));
+      toast.success("Histórico limpo com sucesso!");
+      await carregarDados();
+    } catch (error) {
+      console.error("Erro ao limpar histórico:", error);
+      toast.error("Erro ao limpar histórico");
     }
   };
 
@@ -115,7 +145,6 @@ export const OutrosTela = () => {
             </div>
           </div>
         </div>
-        
 
         {/* Abas */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
@@ -158,6 +187,8 @@ export const OutrosTela = () => {
               <HistoricoEntregas
                 entregas={historicoCompleto}
                 isLoading={isLoading}
+                onExcluir={handleExcluirEntrega}
+                onLimparHistorico={handleLimparHistorico}
               />
             )}
           </div>

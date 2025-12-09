@@ -41,30 +41,41 @@ const TimelineEvento = ({ evento, isLast }: TimelineEventoProps) => {
   };
 
   const corBolinha = () => {
-    if (evento.tipo.includes('resolvid')) return 'bg-emerald-500';
-    if (evento.tipo.includes('adicionad')) return 'bg-blue-500';
-    if (evento.tipo.includes('avaria')) return 'bg-yellow-500';
-    if (evento.tipo.includes('quebrado')) return 'bg-red-500';
-    if (evento.tipo.includes('devolvido')) return 'bg-gray-500';
-    return 'bg-gray-400';
+    if (evento.tipo.includes("resolvid")) return "bg-emerald-500";
+    if (evento.tipo.includes("adicionad")) return "bg-blue-500";
+    if (evento.tipo.includes("avaria")) return "bg-yellow-500";
+    if (evento.tipo.includes("quebrado")) return "bg-red-500";
+    if (evento.tipo.includes("devolvido")) return "bg-gray-500";
+    return "bg-gray-400";
   };
 
-  const data = new Date(evento.createdAt).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const data = (() => {
+    try {
+      const date = new Date(evento.createdAt);
+      // Verifica se a data é válida
+      if (isNaN(date.getTime())) {
+        return "Data inválida";
+      }
+      return date.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "Data inválida";
+    }
+  })();
 
   return (
     <div className="flex gap-3 group">
       {/* Linha vertical e bolinha */}
       <div className="flex flex-col items-center">
-        <div className={`w-3 h-3 rounded-full ${corBolinha()} ring-4 ring-white flex-shrink-0 mt-1.5`} />
-        {!isLast && (
-          <div className="w-0.5 h-full bg-gray-200 mt-1" />
-        )}
+        <div
+          className={`w-3 h-3 rounded-full ${corBolinha()} ring-4 ring-white flex-shrink-0 mt-1.5`}
+        />
+        {!isLast && <div className="w-0.5 h-full bg-gray-200 mt-1" />}
       </div>
 
       {/* Conteúdo do evento */}
@@ -100,16 +111,26 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
 
   // Evento mais recente
   const eventoRecente = grupo.eventos[0];
-  const dataRecente = new Date(eventoRecente.createdAt).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const dataRecente = (() => {
+    try {
+      const date = new Date(eventoRecente.createdAt);
+      if (isNaN(date.getTime())) {
+        return "Data inválida";
+      }
+      return date.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return "Data inválida";
+    }
+  })();
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {/* Header do Card */}
-      <div 
+      <div
         className="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setExpandido(!expandido)}
       >
@@ -124,7 +145,8 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
               </h3>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-xs text-gray-600">
-                  {grupo.eventos.length} evento{grupo.eventos.length !== 1 ? 's' : ''}
+                  {grupo.eventos.length} evento
+                  {grupo.eventos.length !== 1 ? "s" : ""}
                 </span>
                 <span className="text-xs text-gray-400">•</span>
                 <span className="text-xs text-gray-600">
@@ -136,8 +158,10 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
 
           {/* Indicador de expansão */}
           <button className="text-gray-400 hover:text-gray-600 transition-colors">
-            <ArrowRight 
-              className={`w-5 h-5 transition-transform ${expandido ? 'rotate-90' : ''}`}
+            <ArrowRight
+              className={`w-5 h-5 transition-transform ${
+                expandido ? "rotate-90" : ""
+              }`}
             />
           </button>
         </div>
@@ -231,7 +255,20 @@ export const TabHistorico = () => {
           radio: "📻",
         };
         icone = icones[evento.materialATipo as TipoMaterialA];
-        titulo = `${evento.materialATipo.charAt(0).toUpperCase() + evento.materialATipo.slice(1)} #${evento.materialANumero} - Posto ${evento.postoNumero}`;
+
+        // ✅ Formata o número como data (timestamp → dd/mm/aa)
+        const dataFormatada = new Date(
+          evento.materialANumero
+        ).toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        });
+
+        const tipoCapitalizado =
+          evento.materialATipo.charAt(0).toUpperCase() +
+          evento.materialATipo.slice(1);
+        titulo = `${tipoCapitalizado} #${dataFormatada} - Posto ${evento.postoNumero}`;
       }
       // Material Tipo B (whitemed, bolsa APH, Outros)
       else if (evento.materialTipoBNome) {
@@ -260,8 +297,9 @@ export const TabHistorico = () => {
 
     // Ordenar eventos dentro de cada grupo (mais recente primeiro)
     Object.values(grupos).forEach((grupo) => {
-      grupo.eventos.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      grupo.eventos.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     });
 
@@ -359,11 +397,10 @@ export const TabHistorico = () => {
 
       {/* Header de Resultados */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">
-          Histórico Agrupado
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900">Histórico Agrupado</h2>
         <span className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold">
-          {eventosAgrupados.length} {eventosAgrupados.length !== 1 ? 'grupos' : 'grupo'}
+          {eventosAgrupados.length}{" "}
+          {eventosAgrupados.length !== 1 ? "grupos" : "grupo"}
         </span>
       </div>
 
