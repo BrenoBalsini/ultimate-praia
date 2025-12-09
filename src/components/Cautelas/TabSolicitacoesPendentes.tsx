@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { FormCriarSolicitacao } from '../Solicitacoes/FormCriarSolicitacao';
 import { ListaSolicitacoes } from '../Solicitacoes/ListaSolicitacoes';
 import { ModalConfirmarEntrega } from '../Solicitacoes/ModalConfirmarEntrega';
@@ -33,15 +34,26 @@ export const TabSolicitacoesPendentes = ({
 }: TabSolicitacoesPendentesProps) => {
   return (
     <>
-      <div className="space-y-4">
-        {/* Botão Criar */}
-        <div>
+      <div className="space-y-6">
+        {/* Header com botão */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Solicitações Pendentes</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {solicitacoes.length === 0 
+                ? 'Nenhuma solicitação no momento'
+                : `${solicitacoes.length} ${solicitacoes.length === 1 ? 'solicitação' : 'solicitações'} aguardando entrega`
+              }
+            </p>
+          </div>
+          
           <button
             type="button"
             onClick={onOpenModalCriar}
-            className="px-5 py-3 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+            className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
           >
-            + Criar Nova Solicitação
+            <Plus className="w-4 h-4" />
+            <span>Criar Nova Solicitação</span>
           </button>
         </div>
 

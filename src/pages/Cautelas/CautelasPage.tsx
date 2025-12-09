@@ -4,9 +4,10 @@ import { TabCautelasAtivas } from '../../components/Cautelas/TabCautelasAtivas';
 import { TabSolicitacoesPendentes } from '../../components/Cautelas/TabSolicitacoesPendentes';
 import { ModalDetalhesCautela } from '../../components/Cautelas/ModalDetalhesCautela';
 import { FormAdicionarItem } from '../../components/Cautelas/FormAdicionarItem';
+import { FormSubstituirItem } from '../../components/Cautelas/FormSubstituirItem';
 import { Timestamp } from 'firebase/firestore';
 import type { GVC } from '../../services/gvcService';
-import type { Cautela, ItemCautelado, CondicaoItem, Solicitacao } from '../../types/cautelas';
+import type { Cautela, ItemCautelado, CondicaoItem } from '../../types/cautelas';
 import { obterGVCs } from '../../services/gvcService';
 import {
   obterCautelaPorGVC,
@@ -14,6 +15,7 @@ import {
   adicionarItemCautela,
   devolverItem,
   adicionarMultiplosItens,
+  substituirItem,
 } from '../../services/cautelasService';
 import {
   criarSolicitacao,
@@ -21,6 +23,7 @@ import {
   obterItensParaEntrega,
   marcarItensEntregues,
 } from '../../services/solicitacoesService';
+import type { Solicitacao } from '../../types/cautelas';
 
 type AbaAtiva = 'cautelas' | 'solicitacoes';
 
@@ -35,6 +38,8 @@ export const CautelasPage = () => {
   const [cautelaSelecionada, setCautelaSelecionada] = useState<Cautela | null>(null);
   const [isModalDetalhesOpen, setIsModalDetalhesOpen] = useState(false);
   const [isModalAdicionarOpen, setIsModalAdicionarOpen] = useState(false);
+  const [isModalSubstituirOpen, setIsModalSubstituirOpen] = useState(false);
+  const [itemParaSubstituir, setItemParaSubstituir] = useState<ItemCautelado | null>(null);
   
   // Solicitações
   const [isModalCriarSolicitacaoOpen, setIsModalCriarSolicitacaoOpen] = useState(false);
@@ -114,8 +119,40 @@ export const CautelasPage = () => {
     }
   };
 
-  const handleSubstituirItem = () => {
-    alert('Funcionalidade de substituição em desenvolvimento');
+  const handleAbrirSubstituir = (itemId: string) => {
+    if (!cautelaSelecionada) return;
+    
+    const item = cautelaSelecionada.itensAtivos.find(i => i.id === itemId);
+    if (item) {
+      setItemParaSubstituir(item);
+      setIsModalSubstituirOpen(true);
+    }
+  };
+
+  const handleConfirmarSubstituicao = async (
+    novoItem: ItemCautelado,
+    condicaoFinalAntigo: CondicaoItem,
+    observacao: string
+  ) => {
+    if (!cautelaSelecionada?.id || !itemParaSubstituir?.id) return;
+
+    try {
+      await substituirItem(
+        cautelaSelecionada.id,
+        itemParaSubstituir.id,
+        novoItem,
+        condicaoFinalAntigo,
+        observacao
+      );
+
+      const cautelaAtualizada = await obterCautelaPorGVC(cautelaSelecionada.gvcId);
+      setCautelaSelecionada(cautelaAtualizada);
+      setIsModalSubstituirOpen(false);
+      setItemParaSubstituir(null);
+    } catch (error) {
+      console.error('Erro ao substituir item:', error);
+      throw error;
+    }
   };
 
   // ===== SOLICITAÇÕES =====
@@ -143,13 +180,11 @@ export const CautelasPage = () => {
     if (!solicitacaoParaEntrega) return;
 
     try {
-      // 1. Obter os itens que foram marcados para entrega
       const itensParaEntrega = await obterItensParaEntrega(
         solicitacaoParaEntrega.id!,
         itensEntreguesIds
       );
 
-      // 2. Buscar ou criar cautela do GVC
       let cautela = await obterCautelaPorGVC(solicitacaoParaEntrega.gvcId);
       if (!cautela) {
         cautela = await criarCautela(
@@ -158,22 +193,17 @@ export const CautelasPage = () => {
         );
       }
 
-      // 3. Converter itens solicitados para ItemCautelado com data atual
       const itensParaCautela: ItemCautelado[] = itensParaEntrega.map((item) => ({
         item: item.item,
         tamanho: item.tamanho,
         condicao: item.condicao,
-        dataEmprestimo: Timestamp.now(), // Data de hoje
+        dataEmprestimo: Timestamp.now(),
         observacao: '',
       }));
 
-      // 4. Adicionar itens à cautela
       await adicionarMultiplosItens(cautela.id!, itensParaCautela);
-
-      // 5. Marcar itens como entregues na solicitação
       await marcarItensEntregues(solicitacaoParaEntrega.id!, itensEntreguesIds);
 
-      // 6. Atualizar lista de solicitações
       const solicitacoesAtualizadas = await obterSolicitacoesPendentes();
       setSolicitacoes(solicitacoesAtualizadas);
 
@@ -268,7 +298,7 @@ export const CautelasPage = () => {
         cautela={cautelaSelecionada}
         onAdicionarItem={() => setIsModalAdicionarOpen(true)}
         onDevolverItem={handleDevolverItem}
-        onSubstituirItem={handleSubstituirItem}
+        onSubstituirItem={handleAbrirSubstituir}
       />
 
       <FormAdicionarItem
@@ -276,6 +306,17 @@ export const CautelasPage = () => {
         onClose={() => setIsModalAdicionarOpen(false)}
         gvcNome={gvcSelecionado?.nome || ''}
         onConfirmar={handleAdicionarItens}
+      />
+
+      <FormSubstituirItem
+        isOpen={isModalSubstituirOpen}
+        onClose={() => {
+          setIsModalSubstituirOpen(false);
+          setItemParaSubstituir(null);
+        }}
+        gvcNome={gvcSelecionado?.nome || ''}
+        itemAntigo={itemParaSubstituir}
+        onConfirmar={handleConfirmarSubstituicao}
       />
     </div>
   );
