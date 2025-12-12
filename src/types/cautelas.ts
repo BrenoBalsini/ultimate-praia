@@ -35,7 +35,6 @@ export interface Cautela {
   atualizadoEm?: Timestamp;
 }
 
-// ATUALIZADO: ItemSolicitado agora tem tamanho e condição
 export interface ItemSolicitado {
   id?: string;
   item: string;
@@ -54,8 +53,18 @@ export interface Solicitacao {
   atualizadaEm?: Timestamp;
 }
 
-// Lista de itens disponíveis para cautela
-export const ITENS_CAUTELA = [
+// NOVO: Interface para item cautelável configurável
+export interface ItemCautelavel {
+  id?: string;
+  nome: string;
+  ativo: boolean;
+  ordem: number;
+  criadoEm?: Timestamp;
+  atualizadoEm?: Timestamp;
+}
+
+// Lista padrão de itens (para inicialização)
+export const ITENS_CAUTELA_PADRAO = [
   'lifebelt',
   'apito',
   'nadadeira',
@@ -73,4 +82,4 @@ export const ITENS_CAUTELA = [
   'meia',
 ] as const;
 
-export type ItemCautelaType = typeof ITENS_CAUTELA[number];
+export type ItemCautelaType = typeof ITENS_CAUTELA_PADRAO[number];

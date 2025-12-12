@@ -5,7 +5,9 @@ import { TabSolicitacoesPendentes } from '../../components/Cautelas/TabSolicitac
 import { ModalDetalhesCautela } from '../../components/Cautelas/ModalDetalhesCautela';
 import { FormAdicionarItem } from '../../components/Cautelas/FormAdicionarItem';
 import { FormSubstituirItem } from '../../components/Cautelas/FormSubstituirItem';
+import { ModalGerenciarItens } from '../../components/Cautelas/ModalGerenciarItens';
 import { Timestamp } from 'firebase/firestore';
+import { Settings } from 'lucide-react';
 import type { GVC } from '../../services/gvcService';
 import type { Cautela, ItemCautelado, CondicaoItem } from '../../types/cautelas';
 import { obterGVCs } from '../../services/gvcService';
@@ -45,6 +47,9 @@ export const CautelasPage = () => {
   const [isModalCriarSolicitacaoOpen, setIsModalCriarSolicitacaoOpen] = useState(false);
   const [isModalEntregaOpen, setIsModalEntregaOpen] = useState(false);
   const [solicitacaoParaEntrega, setSolicitacaoParaEntrega] = useState<Solicitacao | null>(null);
+
+  // NOVO: Modal Gerenciar Itens
+  const [isModalGerenciarItensOpen, setIsModalGerenciarItensOpen] = useState(false);
 
   useEffect(() => {
     carregarDados();
@@ -215,49 +220,70 @@ export const CautelasPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
 
-      <div className="px-6 py-8 max-w-7xl mx-auto">
-        <div className="flex flex-col gap-6">
-          {/* Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Cautelas e Solicitações</h1>
-          </div>
+      <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+                  Cautelas e Solicitações
+                </h1>
+                <p className="text-blue-100 text-sm">
+                  Gerenciamento de empréstimos e solicitações de equipamentos
+                </p>
+              </div>
 
-          {/* Abas */}
-          <div className="border-b border-gray-200">
-            <div className="flex gap-4">
+              {/* NOVO: Botão Gerenciar Itens */}
               <button
                 type="button"
-                onClick={() => setAba('cautelas')}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  aba === 'cautelas'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                onClick={() => setIsModalGerenciarItensOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold text-sm hover:bg-white/20 transition-all border border-white/20"
               >
-                Cautelas Ativas
-              </button>
-              <button
-                type="button"
-                onClick={() => setAba('solicitacoes')}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  aba === 'solicitacoes'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Solicitações Pendentes
+                <Settings className="w-5 h-5" />
+                Lista de Itens
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Conteúdo */}
+        {/* Abas */}
+        <div className="bg-white rounded-t-2xl border-b-2 border-gray-200 shadow-sm">
+          <div className="flex gap-4 px-6">
+            <button
+              type="button"
+              onClick={() => setAba('cautelas')}
+              className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                aba === 'cautelas'
+                  ? 'border-[#1E3A5F] text-[#1E3A5F]'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Cautelas Ativas
+            </button>
+            <button
+              type="button"
+              onClick={() => setAba('solicitacoes')}
+              className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                aba === 'solicitacoes'
+                  ? 'border-[#1E3A5F] text-[#1E3A5F]'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Solicitações Pendentes
+            </button>
+          </div>
+        </div>
+
+        {/* Conteúdo */}
+        <div className="bg-white rounded-b-2xl shadow-lg border border-gray-200 border-t-0">
           {isLoading ? (
-            <div className="text-center py-12">
-              <div className="mx-auto mb-4 w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-600">Carregando...</p>
+            <div className="text-center py-20">
+              <div className="mx-auto mb-4 w-10 h-10 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin" />
+              <p className="text-gray-600 text-sm">Carregando...</p>
             </div>
           ) : (
             <>
@@ -317,6 +343,12 @@ export const CautelasPage = () => {
         gvcNome={gvcSelecionado?.nome || ''}
         itemAntigo={itemParaSubstituir}
         onConfirmar={handleConfirmarSubstituicao}
+      />
+
+      {/* NOVO: Modal Gerenciar Itens */}
+      <ModalGerenciarItens
+        isOpen={isModalGerenciarItensOpen}
+        onClose={() => setIsModalGerenciarItensOpen(false)}
       />
     </div>
   );

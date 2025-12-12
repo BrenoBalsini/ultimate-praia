@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Package } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import type { ItemCautelado, CondicaoItem, TamanhoItem } from '../../types/cautelas';
-import { ITENS_CAUTELA } from '../../types/cautelas';
+import { obterItensCautelaveis } from '../../services/itensCautelaveisService';
 
 interface FormAdicionarItemProps {
   isOpen: boolean;
@@ -32,6 +32,30 @@ export const FormAdicionarItem = ({
   const [itensLista, setItensLista] = useState<ItemFormulario[]>([]);
   const [erro, setErro] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // NOVO: Estado para itens disponíveis
+  const [itensCautelaveis, setItensCautelaveis] = useState<string[]>([]);
+  const [isLoadingItens, setIsLoadingItens] = useState(true);
+
+  // NOVO: Carregar itens ao abrir o modal
+  useEffect(() => {
+    if (isOpen) {
+      carregarItensCautelaveis();
+    }
+  }, [isOpen]);
+
+  const carregarItensCautelaveis = async () => {
+    try {
+      setIsLoadingItens(true);
+      const itens = await obterItensCautelaveis(true); // Apenas ativos
+      setItensCautelaveis(itens.map(i => i.nome));
+    } catch (error) {
+      console.error('Erro ao carregar itens cauteláveis:', error);
+      setErro('Erro ao carregar lista de itens');
+    } finally {
+      setIsLoadingItens(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -171,18 +195,24 @@ export const FormAdicionarItem = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Item *
                     </label>
-                    <select
-                      value={itemAtual.item}
-                      onChange={(e) => setItemAtual({ ...itemAtual, item: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
-                    >
-                      <option value="">Selecione...</option>
-                      {ITENS_CAUTELA.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
+                    {isLoadingItens ? (
+                      <div className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                        Carregando itens...
+                      </div>
+                    ) : (
+                      <select
+                        value={itemAtual.item}
+                        onChange={(e) => setItemAtual({ ...itemAtual, item: e.target.value })}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
+                      >
+                        <option value="">Selecione...</option>
+                        {itensCautelaveis.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   {/* Tamanho */}

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, ClipboardList } from 'lucide-react';
 import type { GVC } from '../../services/gvcService';
-import { ITENS_CAUTELA, type CondicaoItem, type TamanhoItem } from '../../types/cautelas';
+import type { CondicaoItem, TamanhoItem } from '../../types/cautelas';
+import { obterItensCautelaveis } from '../../services/itensCautelaveisService';
 
 interface ItemFormulario {
   item: string;
@@ -31,6 +32,30 @@ export const FormCriarSolicitacao = ({
   const [itensLista, setItensLista] = useState<ItemFormulario[]>([]);
   const [erro, setErro] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // NOVO: Estado para itens cauteláveis
+  const [itensCautelaveis, setItensCautelaveis] = useState<string[]>([]);
+  const [isLoadingItens, setIsLoadingItens] = useState(true);
+
+  // NOVO: Carregar itens ao abrir o modal
+  useEffect(() => {
+    if (isOpen) {
+      carregarItensCautelaveis();
+    }
+  }, [isOpen]);
+
+  const carregarItensCautelaveis = async () => {
+    try {
+      setIsLoadingItens(true);
+      const itens = await obterItensCautelaveis(true); // Apenas ativos
+      setItensCautelaveis(itens.map(i => i.nome));
+    } catch (error) {
+      console.error('Erro ao carregar itens cauteláveis:', error);
+      setErro('Erro ao carregar lista de itens');
+    } finally {
+      setIsLoadingItens(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -165,19 +190,25 @@ export const FormCriarSolicitacao = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Item *
                     </label>
-                    <select
-                      value={itemAtual.item}
-                      onChange={(e) => setItemAtual({ ...itemAtual, item: e.target.value })}
-                      className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
-                      disabled={isSubmitting}
-                    >
-                      <option value="">Selecione...</option>
-                      {ITENS_CAUTELA.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
+                    {isLoadingItens ? (
+                      <div className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                        Carregando itens...
+                      </div>
+                    ) : (
+                      <select
+                        value={itemAtual.item}
+                        onChange={(e) => setItemAtual({ ...itemAtual, item: e.target.value })}
+                        className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        <option value="">Selecione...</option>
+                        {itensCautelaveis.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   {/* Tamanho */}
@@ -233,7 +264,7 @@ export const FormCriarSolicitacao = ({
                       >
                         <div className="flex items-center gap-2 flex-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 capitalize">
                             {item.item}
                             {item.tamanho !== '-' && (
                               <span className="text-gray-500 ml-1">({item.tamanho})</span>

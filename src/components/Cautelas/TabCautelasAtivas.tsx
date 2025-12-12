@@ -3,7 +3,7 @@ import { ChevronRight, Search } from 'lucide-react';
 import type { GVC } from '../../services/gvcService';
 import { obterCautelaPorGVC } from '../../services/cautelasService';
 import type { Cautela } from '../../types/cautelas';
-import { ITENS_CAUTELA } from '../../types/cautelas';
+import { obterItensCautelaveis } from '../../services/itensCautelaveisService';
 
 interface TabCautelasAtivasProps {
   gvcs: GVC[];
@@ -19,8 +19,27 @@ interface CautelaInfo {
 export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps) => {
   const [cautelasInfo, setCautelasInfo] = useState<Map<string, CautelaInfo>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+  const [itensCautelaveis, setItensCautelaveis] = useState<string[]>([]);
+  const [isLoadingItens, setIsLoadingItens] = useState(true);
   
   const gvcsAtivos = gvcs.filter((gvc) => gvc.status === 'ativo');
+
+  // Carregar itens cauteláveis
+  useEffect(() => {
+    const carregarItens = async () => {
+      try {
+        setIsLoadingItens(true);
+        const itens = await obterItensCautelaveis(true);
+        setItensCautelaveis(itens.map(i => i.nome));
+      } catch (error) {
+        console.error('Erro ao carregar itens cauteláveis:', error);
+      } finally {
+        setIsLoadingItens(false);
+      }
+    };
+
+    carregarItens();
+  }, []);
 
   useEffect(() => {
     // Carregar cautelas de todos os GVCs ativos
@@ -106,175 +125,171 @@ export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps)
 
   if (gvcsAtivos.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+      <div className="text-center py-12">
         <p className="text-gray-500">Nenhum guarda-vidas ativo cadastrado</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
       {/* Barra de Busca */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou classificação..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors text-base"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Buscar por nome ou classificação..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors text-base"
+        />
       </div>
 
       {/* Resultados */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {gvcsFiltrados.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              Nenhum resultado encontrado
+      {gvcsFiltrados.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            Nenhum resultado encontrado
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Contador de Resultados */}
+          <div className="pb-3 border-b border-gray-200">
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold text-gray-900">{gvcsFiltrados.length}</span>
+              {' '}guarda-vidas {gvcsFiltrados.length === 1 ? 'encontrado' : 'encontrados'}
             </p>
           </div>
-        ) : (
-          <>
-            {/* Contador de Resultados */}
-            <div className="px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-200">
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold text-gray-900">{gvcsFiltrados.length}</span>
-                {' '}guarda-vidas {gvcsFiltrados.length === 1 ? 'encontrado' : 'encontrados'}
-              </p>
-            </div>
 
-            {/* Tabela Desktop / Cards Mobile */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-[#1E3A5F] to-[#2C5282]">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white w-24">
-                      Classificação
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
-                      Nome
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
+          {/* Tabela Desktop */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide w-24">
+                    Classificação
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Nome
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Itens Cautelados
+                  </th>
+                  <th className="px-4 py-3 w-12"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {gvcsFiltrados.map((gvc) => {
+                  const cautelaInfo = cautelasInfo.get(gvc.id || '');
+                  
+                  return (
+                    <tr
+                      key={gvc.id}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => onSelectGVC(gvc)}
+                    >
+                      <td className="px-4 py-4">
+                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] text-white shadow-sm">
+                          {gvc.posicao}º
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="font-medium text-gray-900">{gvc.nome}</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        {isLoadingItens || cautelaInfo?.isLoading ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                            <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                            <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {itensCautelaveis.map((item) => {
+                              const status = getItemStatus(cautelaInfo?.cautela || null, item);
+                              const colorClass = getStatusColor(status);
+                              
+                              return (
+                                <div
+                                  key={item}
+                                  className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm hover:scale-110 transition-transform`}
+                                  title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
+                                >
+                                  {getItemIcon(item)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Cards Mobile */}
+          <div className="md:hidden space-y-3">
+            {gvcsFiltrados.map((gvc) => {
+              const cautelaInfo = cautelasInfo.get(gvc.id || '');
+              
+              return (
+                <button
+                  key={gvc.id}
+                  type="button"
+                  onClick={() => onSelectGVC(gvc)}
+                  className="w-full bg-white border border-gray-200 rounded-xl p-4 hover:border-[#1E3A5F] hover:shadow-md transition-all text-left"
+                >
+                  {/* Header: Classificação e Nome */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] text-white shadow-sm flex-shrink-0">
+                      {gvc.posicao}º
+                    </span>
+                    <span className="font-medium text-gray-900 flex-1">{gvc.nome}</span>
+                    <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  </div>
+
+                  {/* Itens Cautelados */}
+                  <div className="pl-13">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                       Itens Cautelados
-                    </th>
-                    <th className="px-6 py-4 w-12"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {gvcsFiltrados.map((gvc) => {
-                    const cautelaInfo = cautelasInfo.get(gvc.id || '');
-                    
-                    return (
-                      <tr
-                        key={gvc.id}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => onSelectGVC(gvc)}
-                      >
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] text-white shadow-sm">
-                            {gvc.posicao}º
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-gray-900">{gvc.nome}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {cautelaInfo?.isLoading ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
-                              <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
-                              <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                    </p>
+                    {isLoadingItens || cautelaInfo?.isLoading ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                        <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                        <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {itensCautelaveis.map((item) => {
+                          const status = getItemStatus(cautelaInfo?.cautela || null, item);
+                          const colorClass = getStatusColor(status);
+                          
+                          return (
+                            <div
+                              key={item}
+                              className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm`}
+                              title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
+                            >
+                              {getItemIcon(item)}
                             </div>
-                          ) : (
-                            <div className="flex flex-wrap gap-1.5">
-                              {ITENS_CAUTELA.map((item) => {
-                                const status = getItemStatus(cautelaInfo?.cautela || null, item);
-                                const colorClass = getStatusColor(status);
-                                
-                                return (
-                                  <div
-                                    key={item}
-                                    className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm hover:scale-110 transition-transform`}
-                                    title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
-                                  >
-                                    {getItemIcon(item)}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Cards Mobile */}
-            <div className="md:hidden divide-y divide-gray-200">
-              {gvcsFiltrados.map((gvc) => {
-                const cautelaInfo = cautelasInfo.get(gvc.id || '');
-                
-                return (
-                  <button
-                    key={gvc.id}
-                    type="button"
-                    onClick={() => onSelectGVC(gvc)}
-                    className="w-full p-4 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    {/* Header: Classificação e Nome */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold bg-gradient-to-br from-[#1E3A5F] to-[#2C5282] text-white shadow-sm flex-shrink-0">
-                        {gvc.posicao}º
-                      </span>
-                      <span className="font-medium text-gray-900 flex-1">{gvc.nome}</span>
-                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    </div>
-
-                    {/* Itens Cautelados */}
-                    <div className="pl-13">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                        Itens Cautelados
-                      </p>
-                      {cautelaInfo?.isLoading ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
-                          <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
-                          <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {ITENS_CAUTELA.map((item) => {
-                            const status = getItemStatus(cautelaInfo?.cautela || null, item);
-                            const colorClass = getStatusColor(status);
-                            
-                            return (
-                              <div
-                                key={item}
-                                className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm`}
-                                title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
-                              >
-                                {getItemIcon(item)}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 };
