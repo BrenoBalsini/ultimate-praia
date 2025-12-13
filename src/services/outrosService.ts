@@ -162,13 +162,22 @@ export const obterMateriaisOutros = async (): Promise<string[]> => {
     );
 
     const snapshot = await getDocs(q);
-    const materiais = snapshot.docs.map((doc) => doc.data().nome as string);
+    const materiais = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        // ✅ Filtrar apenas ativos (ou sem campo ativo = antigos)
+        const ativo = data.ativo !== undefined ? data.ativo : true;
+        return ativo ? (data.nome as string) : null;
+      })
+      .filter((nome): nome is string => nome !== null);
+    
     return materiais.sort((a, b) => a.localeCompare(b));
   } catch (error) {
     console.error("Erro ao obter materiais outros:", error);
     throw error;
   }
 };
+
 
 // Obter última entrega de um item específico para um posto
 export const obterUltimaEntregaItem = async (

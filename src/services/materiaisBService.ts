@@ -4,6 +4,7 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import type { CategoriaMaterialB } from '../types/postos';
@@ -12,19 +13,30 @@ const COLLECTION_NAME = 'materiaisTipoB';
 
 export interface MaterialTipoBDoc {
   nome: string;
-  categoria: CategoriaMaterialB; // 'whitemed' | 'bolsa_aph' | 'outros'
+  categoria: CategoriaMaterialB;
+  ativo: boolean; // ✅ Nova propriedade
   createdAt: string;
 }
 
 // Lista todos os materiais tipo B cadastrados globalmente
-export const listarMateriaisTipoB = async (): Promise<
-  (MaterialTipoBDoc & { id: string })[]
-> => {
+export const listarMateriaisTipoB = async (
+  apenasAtivos: boolean = true // ✅ Novo parâmetro
+): Promise<(MaterialTipoBDoc & { id: string })[]> => {
   const snapshot = await getDocs(collection(db, COLLECTION_NAME));
-  return snapshot.docs.map((d) => ({
+  const materiais = snapshot.docs.map((d) => ({
     id: d.id,
     ...(d.data() as MaterialTipoBDoc),
   }));
+
+  // ✅ Garantir que materiais antigos tenham ativo = true
+  const materiaisComAtivo = materiais.map(m => ({
+    ...m,
+    ativo: m.ativo !== undefined ? m.ativo : true
+  }));
+
+  return apenasAtivos
+    ? materiaisComAtivo.filter(m => m.ativo)
+    : materiaisComAtivo;
 };
 
 // Adiciona um novo material tipo B
@@ -38,10 +50,20 @@ export const adicionarMaterialTipoB = async (params: {
   const docRef = await addDoc(collection(db, COLLECTION_NAME), {
     nome,
     categoria,
+    ativo: true, // ✅ Sempre ativo ao criar
     createdAt: now,
   } satisfies MaterialTipoBDoc);
 
   return docRef.id;
+};
+
+// ✅ Nova função: Atualizar material
+export const atualizarMaterialTipoB = async (
+  id: string,
+  dados: Partial<Pick<MaterialTipoBDoc, 'nome' | 'categoria' | 'ativo'>>
+) => {
+  const ref = doc(db, COLLECTION_NAME, id);
+  await updateDoc(ref, dados);
 };
 
 // Remove um material tipo B da lista global

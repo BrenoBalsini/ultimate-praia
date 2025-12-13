@@ -57,14 +57,7 @@ const cards: DashboardCard[] = [
     category: 'secondary',
     disabled: true,
   },
-  {
-    title: "Solicitações GVC",
-    description: "Gerenciamento de demandas dos guarda-vidas",
-    icon: <ClipboardList className="w-6 h-6" />,
-    route: "/solicitacoes-gvc",
-    category: 'secondary',
-    disabled: true,
-  },
+
 ];
 
 export const Dashboard = () => {
