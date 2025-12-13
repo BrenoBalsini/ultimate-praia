@@ -15,7 +15,8 @@ import {
 } from "../../utils/statusMaterialB";
 import { temAlteracoesPendentes } from "../../utils/statusAlteracoes";
 import { useAuth } from "../../hooks/useAuth";
-import { obterStatusBolsaAphTodosPostos } from "../../services/bolsaAphService"; // ✅ NOVO
+import { obterStatusBolsaAphTodosPostos } from "../../services/bolsaAphService";
+import { obterStatusWhiteMedTodosPostos } from "../../services/whiteMedService";
 
 type MaterialKey =
   | "binoculo"
@@ -53,7 +54,8 @@ export const TabPostos = () => {
     useState<StatusMateriaisBByPosto>({});
   const [alteracoesPendentes, setAlteracoesPendentes] =
     useState<AlteracoesByPosto>({});
-  const [bolsaAphAusente, setBolsaAphAusente] = useState<Record<number, boolean>>({}); // ✅ NOVO
+  const [bolsaAphAusente, setBolsaAphAusente] = useState<Record<number, boolean>>({});
+  const [whiteMedAusente, setWhiteMedAusente] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export const TabPostos = () => {
         await initPostosIfNeeded();
 
         // ✅ PARALELIZA todas as chamadas + Bolsa APH status
-        const [resultados, statusAphAusente] = await Promise.all([
+        const [resultados, statusAphAusente, statusWhiteMedAusente] = await Promise.all([
           Promise.all(
             POSTOS_FIXOS.map(async (numero) => {
               const [posto, statusAposto, statusBposto, temAlt] =
@@ -95,7 +97,8 @@ export const TabPostos = () => {
               };
             })
           ),
-          obterStatusBolsaAphTodosPostos(), // ✅ NOVO
+          obterStatusBolsaAphTodosPostos(),
+          obterStatusWhiteMedTodosPostos(),
         ]);
 
         // Montar os objetos de estado
@@ -115,7 +118,8 @@ export const TabPostos = () => {
         setStatusMateriaisA(statusA);
         setStatusMateriaisB(statusB);
         setAlteracoesPendentes(altPend);
-        setBolsaAphAusente(statusAphAusente); // ✅ NOVO
+        setBolsaAphAusente(statusAphAusente);
+        setWhiteMedAusente(statusWhiteMedAusente);
       } catch (error) {
         console.error("Erro ao carregar postos:", error);
       } finally {
@@ -151,7 +155,7 @@ export const TabPostos = () => {
     }
 
     if (material === "whitemed") {
-      navigate(`/postos/${postoNumero}/faltas/whitemed`);
+      navigate(`/postos/${postoNumero}/whitemed`);
       return;
     }
     if (material === "bolsaAph") {
@@ -195,7 +199,8 @@ export const TabPostos = () => {
             statusWhitemed={statusMateriaisB[numero]?.whitemed ?? "ok"}
             statusBolsaAph={statusMateriaisB[numero]?.bolsaAph ?? "ok"}
             statusOutros={statusMateriaisB[numero]?.outros ?? "ok"}
-            bolsaAphAusente={bolsaAphAusente[numero] ?? false} // ✅ NOVO
+            bolsaAphAusente={bolsaAphAusente[numero] ?? false}
+            whiteMedAusente={whiteMedAusente[numero] ?? false}
             temAlteracoesPendentes={alteracoesPendentes[numero] ?? false}
             onToggleAtivo={() => handleToggleAtivo(numero)}
             onMaterialClick={(material) =>

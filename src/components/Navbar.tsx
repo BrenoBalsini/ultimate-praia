@@ -33,7 +33,7 @@ export const Navbar = () => {
                 Ultimate Praia
               </h1>
               <p className="text-blue-200 text-xs leading-tight">
-                Bombeiros Militar SC
+                Bombeiro Militar SC
               </p>
             </div>
           </button>

@@ -15,6 +15,7 @@ import { AlteracoesElogiosPage } from "./pages/Alteracoes/AlteracoesElogiosPage"
 import { DetalhesGVC } from "./pages/GVC/DetalhesGVC";
 import { OutrosTela } from "./pages/Postos/OutrosTela";
 import { BolsaAphTela } from "./pages/Postos/BolsaAphTela";
+import { WhiteMedTela } from "./pages/Postos/WhiteMedTela";
 
 function App() {
   return (
@@ -81,6 +82,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BolsaAphTela />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/postos/:postoNumero/whitemed"
+            element={
+              <ProtectedRoute>
+                <WhiteMedTela />
               </ProtectedRoute>
             }
           />

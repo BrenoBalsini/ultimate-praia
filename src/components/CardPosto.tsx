@@ -14,6 +14,7 @@ interface CardPostoProps {
   statusBolsaAph: 'ok' | 'falta';
   statusOutros: 'ok' | 'falta';
   bolsaAphAusente: boolean;
+  whiteMedAusente: boolean; // ✅ ADICIONADO
   temAlteracoesPendentes: boolean;
   onToggleAtivo: () => void;
   onMaterialClick: (tipo: string) => void;
@@ -31,6 +32,7 @@ export const CardPosto = ({
   statusBolsaAph,
   statusOutros,
   bolsaAphAusente,
+  whiteMedAusente, // ✅ ADICIONADO
   temAlteracoesPendentes,
   onToggleAtivo,
   onMaterialClick,
@@ -87,7 +89,13 @@ export const CardPosto = ({
     if (material === 'guardassol') return corMaterialA(statusGuardassol);
     if (material === 'radio') return corMaterialA(statusRadio);
 
-    if (material === 'whitemed') return corMaterialBTipo(statusWhitemed);
+    // ✅ WHITEMED COM SUPORTE A AUSENTE
+    if (material === 'whitemed') {
+      if (whiteMedAusente) {
+        return 'bg-gray-400 hover:bg-gray-500';
+      }
+      return corMaterialBTipo(statusWhitemed);
+    }
 
     if (material === 'bolsaAph') {
       if (bolsaAphAusente) {
@@ -134,8 +142,8 @@ const MaterialTipoAButton = ({
   materiais: MaterialAComId[];
 }) => {
   const quantidade = materiais.length;
-  const offset = 4;          // deslocamento visual
-  const maxPlaquinhas = 4;   // até 2 atrás (sempre 1 principal na frente)
+  const offset = 4;
+  const maxPlaquinhas = 4;
 
   const getPiorStatus = (): StatusMaterialA => {
     if (materiais.some((m) => m.status === 'quebrado')) return 'quebrado';
@@ -145,18 +153,15 @@ const MaterialTipoAButton = ({
   };
 
   const statusPrincipal = quantidade > 0 ? getPiorStatus() : 'ausente';
-
-  // Número de faixas atrás, mas sem alterar a quantidade real
   const plaquinhas = Math.min(Math.max(quantidade - 1, 0), maxPlaquinhas);
 
   return (
     <div className="relative group">
-      {/* faixas atrás */}
       {plaquinhas > 0 && ativo && (
         <>
           {Array.from({ length: plaquinhas }).map((_, index) => {
-            const step = index + 1;              // 1,2
-            const translate = step * offset;     // 3px, 6px
+            const step = index + 1;
+            const translate = step * offset;
             const mat = materiais[index] ?? materiais[0];
             const cor = getCorPorStatus(mat.status);
 
@@ -170,7 +175,6 @@ const MaterialTipoAButton = ({
                 `}
                 style={{
                   transform: `translate(${translate}px, ${translate}px)`,
-                  
                   zIndex: plaquinhas - step,
                 }}
               />
@@ -179,7 +183,6 @@ const MaterialTipoAButton = ({
         </>
       )}
 
-      {/* card principal grande (sempre 1) */}
       <button
         onClick={() => onMaterialClick(material)}
         disabled={!ativo}
@@ -197,7 +200,6 @@ const MaterialTipoAButton = ({
           {label}
         </span>
 
-        {/* quantidade REAL na bolinha */}
         {quantidade > 1 && ativo && (
           <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white text-gray-900 flex items-center justify-center text-xs font-bold shadow-lg z-20 ring-1 ring-black">
             {quantidade > 9 ? '9+' : quantidade}

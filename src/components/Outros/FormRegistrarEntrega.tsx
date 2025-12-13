@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Package, Calendar, FileText, Hash, ChevronDown } from "lucide-react";
 import { obterMateriaisOutros } from "../../services/outrosService";
 import { obterMateriaisBolsaAph } from "../../services/bolsaAphService";
+import { obterMateriaisWhiteMed } from "../../services/whiteMedService"; // ✅ ADICIONAR
 
 interface FormRegistrarEntregaProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface FormRegistrarEntregaProps {
     observacao?: string;
   }) => Promise<void>;
   postoNumero: number;
-  categoria?: "outros" | "bolsaAph";
+  categoria?: "outros" | "bolsaAph" | "whiteMed"; // ✅ ADICIONAR "whiteMed"
   materialPreenchido?: string;
 }
 
@@ -52,12 +53,20 @@ export const FormRegistrarEntrega = ({
     }
   }, [isOpen, categoria, materialPreenchido]);
 
+  // ✅ ATUALIZAR ESTA FUNÇÃO
   const carregarMateriais = async () => {
     setIsLoadingMateriais(true);
     try {
-      const materiais = categoria === "bolsaAph" 
-        ? await obterMateriaisBolsaAph()
-        : await obterMateriaisOutros();
+      let materiais: string[] = [];
+      
+      if (categoria === "bolsaAph") {
+        materiais = await obterMateriaisBolsaAph();
+      } else if (categoria === "whiteMed") {
+        materiais = await obterMateriaisWhiteMed();
+      } else {
+        materiais = await obterMateriaisOutros();
+      }
+      
       setMateriaisDisponiveis(materiais);
     } catch (error) {
       console.error("Erro ao carregar materiais:", error);
