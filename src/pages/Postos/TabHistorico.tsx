@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Filter, X, ArrowRight } from "lucide-react";
+import { Clock, Filter, X, ArrowRight, ChevronDown } from "lucide-react";
 import {
   buscarHistorico,
   type HistoricoDoc,
@@ -11,9 +11,20 @@ import {
 } from "../../types/postos";
 import { listarMateriaisTipoB } from "../../services/materiaisBService";
 
+// Tipo de filtro de categoria
+type FiltroCategoria = 
+  | "guardassol" 
+  | "radio" 
+  | "binoculo" 
+  | "whitemed" 
+  | "bolsa_aph" 
+  | "outros" 
+  | "alteracoes"
+  | null;
+
 // Tipo para agrupar eventos relacionados
 interface EventoAgrupado {
-  chave: string; // identificador único (ex: "binoculo-1-posto-1")
+  chave: string;
   titulo: string;
   icone: string;
   eventos: HistoricoDoc[];
@@ -32,10 +43,12 @@ const TimelineEvento = ({ evento, isLast }: TimelineEventoProps) => {
       material_a_quebrado: "Marcado como quebrado",
       material_a_resolvido: "Resolvido (OK)",
       material_a_devolvido: "Material devolvido",
+      material_a_deletado: "Material deletado",
       falta_registrada: "Falta registrada",
       falta_resolvida: "Falta resolvida",
       alteracao_adicionada: "Alteração registrada",
       alteracao_resolvida: "Alteração resolvida",
+      outros_entrega_registrada: "Entrega registrada",
     };
     return mapa[evento.tipo] || evento.tipo;
   };
@@ -46,13 +59,13 @@ const TimelineEvento = ({ evento, isLast }: TimelineEventoProps) => {
     if (evento.tipo.includes("avaria")) return "bg-yellow-500";
     if (evento.tipo.includes("quebrado")) return "bg-red-500";
     if (evento.tipo.includes("devolvido")) return "bg-gray-500";
+    if (evento.tipo.includes("deletado")) return "bg-red-700";
     return "bg-gray-400";
   };
 
   const data = (() => {
     try {
       const date = new Date(evento.createdAt);
-      // Verifica se a data é válida
       if (isNaN(date.getTime())) {
         return "Data inválida";
       }
@@ -70,7 +83,6 @@ const TimelineEvento = ({ evento, isLast }: TimelineEventoProps) => {
 
   return (
     <div className="flex gap-3 group">
-      {/* Linha vertical e bolinha */}
       <div className="flex flex-col items-center">
         <div
           className={`w-3 h-3 rounded-full ${corBolinha()} ring-4 ring-white flex-shrink-0 mt-1.5`}
@@ -78,7 +90,6 @@ const TimelineEvento = ({ evento, isLast }: TimelineEventoProps) => {
         {!isLast && <div className="w-0.5 h-full bg-gray-200 mt-1" />}
       </div>
 
-      {/* Conteúdo do evento */}
       <div className="flex-1 pb-6">
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 group-hover:border-gray-300 transition-colors">
           <div className="flex items-start justify-between gap-2 mb-1">
@@ -109,7 +120,6 @@ interface TimelineCardProps {
 const TimelineCard = ({ grupo }: TimelineCardProps) => {
   const [expandido, setExpandido] = useState(true);
 
-  // Evento mais recente
   const eventoRecente = grupo.eventos[0];
   const dataRecente = (() => {
     try {
@@ -129,7 +139,6 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Header do Card */}
       <div
         className="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setExpandido(!expandido)}
@@ -156,7 +165,6 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
             </div>
           </div>
 
-          {/* Indicador de expansão */}
           <button className="text-gray-400 hover:text-gray-600 transition-colors">
             <ArrowRight
               className={`w-5 h-5 transition-transform ${
@@ -167,7 +175,6 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
         </div>
       </div>
 
-      {/* Timeline de eventos */}
       {expandido && (
         <div className="p-6 pt-4">
           {grupo.eventos.map((evento, index) => (
@@ -185,8 +192,13 @@ const TimelineCard = ({ grupo }: TimelineCardProps) => {
 
 export const TabHistorico = () => {
   const [todosEventos, setTodosEventos] = useState<HistoricoDoc[]>([]);
-  const [todosMateriais, setTodosMateriais] = useState<string[]>([]);
-  const [filtroMaterial, setFiltroMaterial] = useState<string | null>(null);
+  const [materiaisPorCategoria, setMateriaisPorCategoria] = useState<
+    Record<string, string[]>
+  >({});
+  
+  // ✅ NOVOS FILTROS - Nível 1 e 2
+  const [filtroCategoria, setFiltroCategoria] = useState<FiltroCategoria>(null);
+  const [filtroMaterialEspecifico, setFiltroMaterialEspecifico] = useState<string | null>(null);
   const [filtroPosto, setFiltroPosto] = useState<NumeroPosto | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -205,10 +217,26 @@ export const TabHistorico = () => {
   const carregarMateriaisFiltro = async () => {
     try {
       const listaB = await listarMateriaisTipoB();
-      const nomesB = listaB.map((m) => m.nome);
-      const tiposA = ["binoculo", "guardassol", "radio"] as const;
-      const todos = [...tiposA, ...nomesB];
-      setTodosMateriais(todos);
+      
+      // Agrupar materiais por categoria
+      const porCategoria: Record<string, string[]> = {
+        whitemed: [],
+        bolsa_aph: [],
+        outros: [],
+      };
+
+      listaB.forEach((material) => {
+        if (porCategoria[material.categoria]) {
+          porCategoria[material.categoria].push(material.nome);
+        }
+      });
+
+      // Ordenar alfabeticamente
+      Object.keys(porCategoria).forEach((cat) => {
+        porCategoria[cat].sort((a, b) => a.localeCompare(b));
+      });
+
+      setMateriaisPorCategoria(porCategoria);
     } catch (error) {
       console.error("Erro ao carregar materiais para filtro:", error);
     }
@@ -219,23 +247,52 @@ export const TabHistorico = () => {
     carregarHistorico();
   }, []);
 
-  // Agrupar eventos relacionados
+  // ✅ Limpar filtro de material específico quando categoria muda
+  useEffect(() => {
+    setFiltroMaterialEspecifico(null);
+  }, [filtroCategoria]);
+
+  // ✅ Obter lista de materiais específicos baseado na categoria selecionada
+  const materiaisEspecificosDisponiveis = useMemo(() => {
+    if (!filtroCategoria) return [];
+    
+    if (filtroCategoria === "whitemed") return materiaisPorCategoria.whitemed || [];
+    if (filtroCategoria === "bolsa_aph") return materiaisPorCategoria.bolsa_aph || [];
+    if (filtroCategoria === "outros") return materiaisPorCategoria.outros || [];
+    
+    return [];
+  }, [filtroCategoria, materiaisPorCategoria]);
+
+  // ✅ Agrupar eventos com filtros avançados
   const eventosAgrupados = useMemo(() => {
     let filtrado = [...todosEventos];
 
-    // Aplicar filtros
-    if (filtroMaterial) {
+    // Filtro por CATEGORIA (Nível 1)
+    if (filtroCategoria) {
       filtrado = filtrado.filter((evento) => {
-        if (evento.materialATipo === filtroMaterial) return true;
-        if (evento.materialTipoBNome === filtroMaterial) return true;
+        // Material Tipo A
+        if (evento.materialATipo === filtroCategoria) return true;
+        
+        // Material Tipo B (por categoria)
+        if (evento.materialTipoBCategoria === filtroCategoria) return true;
+        
+        // Alterações
+        if (filtroCategoria === "alteracoes" && evento.tipo.includes("alteracao")) return true;
+        
         return false;
       });
     }
 
+    // Filtro por MATERIAL ESPECÍFICO (Nível 2)
+    if (filtroMaterialEspecifico) {
+      filtrado = filtrado.filter((evento) => {
+        return evento.materialTipoBNome === filtroMaterialEspecifico;
+      });
+    }
+
+    // Filtro por POSTO
     if (filtroPosto) {
-      filtrado = filtrado.filter(
-        (evento) => evento.postoNumero === filtroPosto
-      );
+      filtrado = filtrado.filter((evento) => evento.postoNumero === filtroPosto);
     }
 
     // Agrupar por material/posto
@@ -246,7 +303,7 @@ export const TabHistorico = () => {
       let titulo: string;
       let icone: string;
 
-      // Material Tipo A (binóculo, guarda-sol, rádio)
+      // Material Tipo A
       if (evento.materialATipo && evento.materialANumero) {
         chave = `material-a-${evento.materialATipo}-${evento.materialANumero}-posto-${evento.postoNumero}`;
         const icones: Record<TipoMaterialA, string> = {
@@ -256,24 +313,20 @@ export const TabHistorico = () => {
         };
         icone = icones[evento.materialATipo as TipoMaterialA];
 
-        // ✅ Formata o número como data (timestamp → dd/mm/aa)
-        const dataFormatada = new Date(
-          evento.materialANumero
-        ).toLocaleDateString("pt-BR", {
+        const dataFormatada = new Date(evento.materialANumero).toLocaleDateString("pt-BR", {
           day: "2-digit",
           month: "2-digit",
           year: "2-digit",
         });
 
         const tipoCapitalizado =
-          evento.materialATipo.charAt(0).toUpperCase() +
-          evento.materialATipo.slice(1);
+          evento.materialATipo.charAt(0).toUpperCase() + evento.materialATipo.slice(1);
         titulo = `${tipoCapitalizado} #${dataFormatada} - Posto ${evento.postoNumero}`;
       }
-      // Material Tipo B (whitemed, bolsa APH, Outros)
+      // Material Tipo B
       else if (evento.materialTipoBNome) {
         chave = `material-b-${evento.materialTipoBNome}-posto-${evento.postoNumero}`;
-        icone = "⚠️";
+        icone = "📦";
         titulo = `${evento.materialTipoBNome} - Posto ${evento.postoNumero}`;
       }
       // Alteração de posto
@@ -284,39 +337,36 @@ export const TabHistorico = () => {
       }
 
       if (!grupos[chave]) {
-        grupos[chave] = {
-          chave,
-          titulo,
-          icone,
-          eventos: [],
-        };
+        grupos[chave] = { chave, titulo, icone, eventos: [] };
       }
 
       grupos[chave].eventos.push(evento);
     });
 
-    // Ordenar eventos dentro de cada grupo (mais recente primeiro)
+    // Ordenar eventos dentro de cada grupo
     Object.values(grupos).forEach((grupo) => {
       grupo.eventos.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     });
 
-    // Converter para array e ordenar por evento mais recente
     return Object.values(grupos).sort((a, b) => {
       const dataA = new Date(a.eventos[0].createdAt).getTime();
       const dataB = new Date(b.eventos[0].createdAt).getTime();
       return dataB - dataA;
     });
-  }, [todosEventos, filtroMaterial, filtroPosto]);
+  }, [todosEventos, filtroCategoria, filtroMaterialEspecifico, filtroPosto]);
 
   const limparFiltros = () => {
-    setFiltroMaterial(null);
+    setFiltroCategoria(null);
+    setFiltroMaterialEspecifico(null);
     setFiltroPosto(null);
   };
 
-  const temFiltrosAtivos = filtroMaterial !== null || filtroPosto !== null;
+  const temFiltrosAtivos = 
+    filtroCategoria !== null || 
+    filtroMaterialEspecifico !== null || 
+    filtroPosto !== null;
 
   if (loading && todosEventos.length === 0) {
     return (
@@ -329,58 +379,94 @@ export const TabHistorico = () => {
 
   return (
     <div className="space-y-6">
-      {/* Card de Filtros */}
+      {/* ✅ Card de Filtros Avançados */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-5 h-5 text-[#1E3A5F]" />
-          <h2 className="text-lg font-semibold text-gray-900">Filtros</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Filtros Avançados</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Filtro por Material */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filtro por CATEGORIA (Nível 1) */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Material
+              Tipo de Material
             </label>
-            <select
-              value={filtroMaterial || ""}
-              onChange={(e) =>
-                setFiltroMaterial(e.target.value ? e.target.value : null)
-              }
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
-            >
-              <option value="">Todos os materiais</option>
-              {todosMateriais.map((material) => (
-                <option key={material} value={material}>
-                  {material.charAt(0).toUpperCase() + material.slice(1)}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={filtroCategoria || ""}
+                onChange={(e) =>
+                  setFiltroCategoria(e.target.value ? (e.target.value as FiltroCategoria) : null)
+                }
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors appearance-none"
+              >
+                <option value="">Todos os tipos</option>
+                <optgroup label="Materiais Tipo A">
+                  <option value="guardassol">Guarda-Sol</option>
+                  <option value="radio">Rádio</option>
+                  <option value="binoculo">Binóculo</option>
+                </optgroup>
+                <optgroup label="Materiais Tipo B">
+                  <option value="whitemed">Whitemed</option>
+                  <option value="bolsa_aph">Bolsa APH</option>
+                  <option value="outros">Outros Materiais</option>
+                </optgroup>
+                <optgroup label="Outros">
+                  <option value="alteracoes">Alterações</option>
+                </optgroup>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
-          {/* Filtro por Posto */}
+          {/* Filtro por MATERIAL ESPECÍFICO (Nível 2) - Só aparece se categoria permitir */}
+          {filtroCategoria && materiaisEspecificosDisponiveis.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Material Específico
+              </label>
+              <div className="relative">
+                <select
+                  value={filtroMaterialEspecifico || ""}
+                  onChange={(e) =>
+                    setFiltroMaterialEspecifico(e.target.value || null)
+                  }
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors appearance-none"
+                >
+                  <option value="">Todos os materiais</option>
+                  {materiaisEspecificosDisponiveis.map((material) => (
+                    <option key={material} value={material}>
+                      {material}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+          )}
+
+          {/* Filtro por POSTO */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               Posto
             </label>
-            <select
-              value={filtroPosto || ""}
-              onChange={(e) =>
-                setFiltroPosto(
-                  e.target.value
-                    ? (Number(e.target.value) as NumeroPosto)
-                    : null
-                )
-              }
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors"
-            >
-              <option value="">Todos os postos</option>
-              {POSTOS_FIXOS.map((numero) => (
-                <option key={numero} value={numero}>
-                  Posto {numero}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={filtroPosto || ""}
+                onChange={(e) =>
+                  setFiltroPosto(e.target.value ? (Number(e.target.value) as NumeroPosto) : null)
+                }
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] transition-colors appearance-none"
+              >
+                <option value="">Todos os postos</option>
+                {POSTOS_FIXOS.map((numero) => (
+                  <option key={numero} value={numero}>
+                    Posto {numero}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
           </div>
         </div>
 
@@ -399,8 +485,7 @@ export const TabHistorico = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Histórico Agrupado</h2>
         <span className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold">
-          {eventosAgrupados.length}{" "}
-          {eventosAgrupados.length !== 1 ? "grupos" : "grupo"}
+          {eventosAgrupados.length} {eventosAgrupados.length !== 1 ? "grupos" : "grupo"}
         </span>
       </div>
 
