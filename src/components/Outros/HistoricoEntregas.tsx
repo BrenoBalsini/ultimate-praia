@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, User, Trash2, Search, Filter, X, AlertTriangle } from "lucide-react";
+import { Calendar, Trash2, Search, Filter, X, AlertTriangle } from "lucide-react";
 import type { ItemOutro } from "../../services/outrosService";
 
 interface HistoricoEntregasProps {
@@ -257,17 +257,6 @@ export const HistoricoEntregas = ({
                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
                       <span className="text-gray-900 text-sm font-medium">
                         {formatarData(entrega.dataEntrega)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Responsável */}
-                  <div className="flex flex-col col-span-2 sm:col-span-1">
-                    <span className="text-xs text-gray-500 mb-1">Responsável</span>
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-gray-900 text-sm font-medium truncate">
-                        {entrega.criadoPor}
                       </span>
                     </div>
                   </div>

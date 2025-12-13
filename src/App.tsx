@@ -14,6 +14,7 @@ import { CautelasPage } from "./pages/Cautelas/CautelasPage";
 import { AlteracoesElogiosPage } from "./pages/Alteracoes/AlteracoesElogiosPage";
 import { DetalhesGVC } from "./pages/GVC/DetalhesGVC";
 import { OutrosTela } from "./pages/Postos/OutrosTela";
+import { BolsaAphTela } from "./pages/Postos/BolsaAphTela";
 
 function App() {
   return (
@@ -71,6 +72,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <MateriaisATela />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/postos/:postoNumero/bolsa-aph"
+            element={
+              <ProtectedRoute>
+                <BolsaAphTela />
               </ProtectedRoute>
             }
           />

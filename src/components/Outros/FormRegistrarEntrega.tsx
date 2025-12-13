@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Package, Calendar, FileText, Hash, ChevronDown } from "lucide-react";
 import { obterMateriaisOutros } from "../../services/outrosService";
+import { obterMateriaisBolsaAph } from "../../services/bolsaAphService";
 
 interface FormRegistrarEntregaProps {
   isOpen: boolean;
@@ -12,12 +13,16 @@ interface FormRegistrarEntregaProps {
     observacao?: string;
   }) => Promise<void>;
   postoNumero: number;
+  categoria?: "outros" | "bolsaAph";
+  materialPreenchido?: string;
 }
 
 export const FormRegistrarEntrega = ({
   isOpen,
   onClose,
   onSubmit,
+  categoria = "outros",
+  materialPreenchido,
 }: FormRegistrarEntregaProps) => {
   const [nomeItem, setNomeItem] = useState("");
   const [quantidade, setQuantidade] = useState("");
@@ -32,13 +37,27 @@ export const FormRegistrarEntrega = ({
   useEffect(() => {
     if (isOpen) {
       carregarMateriais();
+      
+      // Se tem material preenchido, selecionar automaticamente
+      if (materialPreenchido) {
+        setNomeItem(materialPreenchido);
+      } else {
+        setNomeItem("");
+      }
+      
+      // Resetar outros campos
+      setQuantidade("");
+      setDataEntrega(new Date().toISOString().split("T")[0]);
+      setObservacao("");
     }
-  }, [isOpen]);
+  }, [isOpen, categoria, materialPreenchido]);
 
   const carregarMateriais = async () => {
     setIsLoadingMateriais(true);
     try {
-      const materiais = await obterMateriaisOutros();
+      const materiais = categoria === "bolsaAph" 
+        ? await obterMateriaisBolsaAph()
+        : await obterMateriaisOutros();
       setMateriaisDisponiveis(materiais);
     } catch (error) {
       console.error("Erro ao carregar materiais:", error);
@@ -113,7 +132,7 @@ export const FormRegistrarEntrega = ({
               <select
                 value={nomeItem}
                 onChange={(e) => setNomeItem(e.target.value)}
-                disabled={isLoadingMateriais}
+                disabled={isLoadingMateriais || !!materialPreenchido}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1E3A5F] focus:outline-none transition-colors appearance-none bg-white cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required
               >
@@ -128,6 +147,11 @@ export const FormRegistrarEntrega = ({
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
+            {materialPreenchido && (
+              <p className="text-xs text-gray-500 mt-1">
+                Material pré-selecionado da falta
+              </p>
+            )}
           </div>
 
           {/* Quantidade */}
