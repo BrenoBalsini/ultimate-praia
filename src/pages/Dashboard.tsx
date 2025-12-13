@@ -6,7 +6,6 @@ import {
   Award, 
   Package, 
   Truck, 
-  ClipboardList,
   ChevronRight,
   Lock
 } from "lucide-react";
