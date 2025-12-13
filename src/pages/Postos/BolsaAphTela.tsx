@@ -12,13 +12,15 @@ import {
   obterMateriaisBolsaAph,
   excluirEntregaBolsaAph,
   limparHistoricoPostoBolsaAph,
+  marcarBolsaAphAusente, // ✅ NOVO
+  verificarBolsaAphAusente, // ✅ NOVO
   type ItemBolsaAph,
   type ItemBolsaAphAgregado,
 } from "../../services/bolsaAphService";
 import { resolverFaltaMaterial } from "../../services/faltasService";
 import { registrarEventoFaltaMaterial } from "../../services/historicoService";
 import { TipoEvento } from "../../types/postos";
-import { ArrowLeft, Plus, Package, History, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Package, History, AlertCircle, Eye, EyeOff } from "lucide-react"; // ✅ Adicionar Eye, EyeOff
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import type { NumeroPosto } from "../../types/postos";
@@ -43,11 +45,13 @@ export const BolsaAphTela = () => {
   const [todosItens, setTodosItens] = useState<string[]>([]);
   const [historicoCompleto, setHistoricoCompleto] = useState<ItemBolsaAph[]>([]);
   const [faltaParaResolver, setFaltaParaResolver] = useState<FaltaItem | null>(null);
-  const [reloadFaltas, setReloadFaltas] = useState(0); // ✅ Contador para forçar reload
+  const [reloadFaltas, setReloadFaltas] = useState(0);
+  const [bolsaAusente, setBolsaAusente] = useState(false); // ✅ NOVO
 
   useEffect(() => {
     if (postoNumero) {
       carregarDados();
+      carregarStatusAusente(); // ✅ NOVO
     }
   }, [postoNumero]);
 
@@ -73,6 +77,45 @@ export const BolsaAphTela = () => {
     }
   };
 
+  // ✅ NOVO: Carregar status de ausente
+  const carregarStatusAusente = async () => {
+    if (!postoNumero) return;
+    
+    try {
+      const ausente = await verificarBolsaAphAusente(Number(postoNumero));
+      setBolsaAusente(ausente);
+    } catch (error) {
+      console.error("Erro ao carregar status ausente:", error);
+    }
+  };
+
+  // ✅ NOVO: Toggle ausente/presente
+  const handleToggleAusente = async () => {
+    if (!postoNumero) return;
+
+    const novoStatus = !bolsaAusente;
+    const confirmar = window.confirm(
+      novoStatus
+        ? "Deseja marcar a Bolsa APH como AUSENTE neste posto?"
+        : "Deseja marcar a Bolsa APH como PRESENTE neste posto?"
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await marcarBolsaAphAusente(Number(postoNumero), novoStatus);
+      setBolsaAusente(novoStatus);
+      toast.success(
+        novoStatus 
+          ? "Bolsa APH marcada como ausente" 
+          : "Bolsa APH marcada como presente"
+      );
+    } catch (error) {
+      console.error("Erro ao alterar status:", error);
+      toast.error("Erro ao alterar status");
+    }
+  };
+
   const handleRegistrarEntrega = async (data: {
     nomeItem: string;
     quantidadeEntregue: number;
@@ -82,7 +125,6 @@ export const BolsaAphTela = () => {
     if (!postoNumero || !user?.email) return;
 
     try {
-      // Se estamos resolvendo uma falta, adicionar contexto
       let observacaoFinal = data.observacao;
       if (faltaParaResolver) {
         observacaoFinal = data.observacao
@@ -97,7 +139,6 @@ export const BolsaAphTela = () => {
         observacao: observacaoFinal,
       });
 
-      // Se estava resolvendo uma falta, marcar como resolvida
       if (faltaParaResolver) {
         await resolverFaltaMaterial({
           id: faltaParaResolver.id,
@@ -115,8 +156,6 @@ export const BolsaAphTela = () => {
 
         toast.success("Falta resolvida e entrega registrada!");
         setFaltaParaResolver(null);
-        
-        // ✅ Forçar reload do componente de faltas
         setReloadFaltas(prev => prev + 1);
       } else {
         toast.success("Entrega registrada com sucesso!");
@@ -165,7 +204,6 @@ export const BolsaAphTela = () => {
     setFaltaParaResolver(null);
   };
 
-  // ✅ Callback quando uma falta é registrada diretamente
   const handleFaltaRegistrada = () => {
     setReloadFaltas(prev => prev + 1);
   };
@@ -196,15 +234,41 @@ export const BolsaAphTela = () => {
                 </div>
               </div>
 
-              {abaAtiva !== "faltas" && (
+              {/* ✅ Botões do Header */}
+              <div className="flex items-center gap-2">
+                {/* Botão Toggle Ausente/Presente */}
                 <button
-                  onClick={() => setIsFormOpen(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#1E3A5F] rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  onClick={handleToggleAusente}
+                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
+                    bolsaAusente
+                      ? "bg-gray-500 hover:bg-gray-600 text-white"
+                      : "bg-white text-[#1E3A5F] hover:bg-gray-50"
+                  }`}
                 >
-                  <Plus className="w-5 h-5" />
-                  Registrar Entrega
+                  {bolsaAusente ? (
+                    <>
+                      <EyeOff className="w-5 h-5" />
+                      Ausente
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-5 h-5" />
+                      Presente
+                    </>
+                  )}
                 </button>
-              )}
+
+                {/* Botão Registrar Entrega */}
+                {abaAtiva !== "faltas" && (
+                  <button
+                    onClick={() => setIsFormOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#1E3A5F] rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Registrar Entrega
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -270,11 +334,11 @@ export const BolsaAphTela = () => {
             
             {abaAtiva === "faltas" && postoNumero && (
               <FaltasMaterialB
-                key={reloadFaltas} // ✅ Key muda quando resolve falta, forçando re-render
+                key={reloadFaltas}
                 postoNumero={Number(postoNumero) as NumeroPosto}
                 categoria="bolsa_aph"
                 onRealizarEntrega={handleRealizarEntrega}
-                onFaltaRegistrada={handleFaltaRegistrada} // ✅ Callback para quando registrar falta
+                onFaltaRegistrada={handleFaltaRegistrada}
               />
             )}
           </div>

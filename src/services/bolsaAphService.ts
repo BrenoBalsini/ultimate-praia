@@ -8,6 +8,7 @@ import {
   Timestamp,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
@@ -187,5 +188,83 @@ export const limparHistoricoPostoBolsaAph = async (postoNumero: number): Promise
   } catch (error) {
     console.error("Erro ao limpar histórico:", error);
     throw error;
+  }
+};
+
+// ✅ NOVO: Marcar/Desmarcar Bolsa APH como ausente em um posto
+export const marcarBolsaAphAusente = async (
+  postoNumero: number,
+  ausente: boolean
+): Promise<void> => {
+  try {
+    const q = query(
+      collection(db, "bolsaAphStatus"),
+      where("postoNumero", "==", postoNumero)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      // Criar novo documento
+      await addDoc(collection(db, "bolsaAphStatus"), {
+        postoNumero,
+        ausente,
+        atualizadoEm: Timestamp.now(),
+      });
+    } else {
+      // Atualizar existente
+      const docRef = doc(db, "bolsaAphStatus", snapshot.docs[0].id);
+      await updateDoc(docRef, {
+        ausente,
+        atualizadoEm: Timestamp.now(),
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao marcar Bolsa APH como ausente:", error);
+    throw error;
+  }
+};
+
+// ✅ NOVO: Verificar se Bolsa APH está ausente em um posto
+export const verificarBolsaAphAusente = async (
+  postoNumero: number
+): Promise<boolean> => {
+  try {
+    const q = query(
+      collection(db, "bolsaAphStatus"),
+      where("postoNumero", "==", postoNumero)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return false; // Não há registro = não está ausente
+    }
+
+    const data = snapshot.docs[0].data();
+    return data.ausente || false;
+  } catch (error) {
+    console.error("Erro ao verificar Bolsa APH ausente:", error);
+    return false;
+  }
+};
+
+// ✅ NOVO: Obter status de todos os postos (para CardPostos)
+export const obterStatusBolsaAphTodosPostos = async (): Promise<
+  Record<number, boolean>
+> => {
+  try {
+    const snapshot = await getDocs(collection(db, "bolsaAphStatus"));
+    const status: Record<number, boolean> = {};
+
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      status[data.postoNumero] = data.ausente || false;
+    });
+
+    return status;
+  } catch (error) {
+    console.error("Erro ao obter status Bolsa APH:", error);
+    return {};
   }
 };

@@ -111,3 +111,20 @@ export const deletarMaterialA = async (id: string) => {
   const materialRef = doc(db, COLLECTION_NAME, id);
   await deleteDoc(materialRef);
 };
+
+// ✅ NOVA FUNÇÃO: Lista todos materiais tipo A de um posto (todos os tipos)
+// Útil para contar quantidades nos cards
+export const listarMateriaisA = async (
+  postoNumero: NumeroPosto
+): Promise<(MaterialADoc & { id: string })[]> => {
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('postoNumero', '==', postoNumero)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as MaterialADoc),
+  }));
+};

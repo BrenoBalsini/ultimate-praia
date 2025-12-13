@@ -15,6 +15,7 @@ import {
 } from "../../utils/statusMaterialB";
 import { temAlteracoesPendentes } from "../../utils/statusAlteracoes";
 import { useAuth } from "../../hooks/useAuth";
+import { obterStatusBolsaAphTodosPostos } from "../../services/bolsaAphService"; // ✅ NOVO
 
 type MaterialKey =
   | "binoculo"
@@ -52,6 +53,7 @@ export const TabPostos = () => {
     useState<StatusMateriaisBByPosto>({});
   const [alteracoesPendentes, setAlteracoesPendentes] =
     useState<AlteracoesByPosto>({});
+  const [bolsaAphAusente, setBolsaAphAusente] = useState<Record<number, boolean>>({}); // ✅ NOVO
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,30 +70,33 @@ export const TabPostos = () => {
       try {
         await initPostosIfNeeded();
 
-        // ✅ PARALELIZA todas as chamadas
-        const resultados = await Promise.all(
-          POSTOS_FIXOS.map(async (numero) => {
-            const [posto, statusAposto, statusBposto, temAlt] =
-              await Promise.all([
-                getPostoByNumero(numero as NumeroPosto),
-                calcularStatusMateriaisAParaPosto(numero as NumeroPosto),
-                calcularStatusMateriaisBParaPosto(numero as NumeroPosto),
-                temAlteracoesPendentes(numero as NumeroPosto),
-              ]);
+        // ✅ PARALELIZA todas as chamadas + Bolsa APH status
+        const [resultados, statusAphAusente] = await Promise.all([
+          Promise.all(
+            POSTOS_FIXOS.map(async (numero) => {
+              const [posto, statusAposto, statusBposto, temAlt] =
+                await Promise.all([
+                  getPostoByNumero(numero as NumeroPosto),
+                  calcularStatusMateriaisAParaPosto(numero as NumeroPosto),
+                  calcularStatusMateriaisBParaPosto(numero as NumeroPosto),
+                  temAlteracoesPendentes(numero as NumeroPosto),
+                ]);
 
-            return {
-              numero,
-              ativo: posto?.ativo ?? true,
-              statusA: {
-                binoculo: statusAposto.binoculo,
-                guardassol: statusAposto.guardassol,
-                radio: statusAposto.radio,
-              },
-              statusB: statusBposto,
-              alteracoes: temAlt,
-            };
-          })
-        );
+              return {
+                numero,
+                ativo: posto?.ativo ?? true,
+                statusA: {
+                  binoculo: statusAposto.binoculo,
+                  guardassol: statusAposto.guardassol,
+                  radio: statusAposto.radio,
+                },
+                statusB: statusBposto,
+                alteracoes: temAlt,
+              };
+            })
+          ),
+          obterStatusBolsaAphTodosPostos(), // ✅ NOVO
+        ]);
 
         // Montar os objetos de estado
         const estados: Record<number, boolean> = {};
@@ -110,6 +115,7 @@ export const TabPostos = () => {
         setStatusMateriaisA(statusA);
         setStatusMateriaisB(statusB);
         setAlteracoesPendentes(altPend);
+        setBolsaAphAusente(statusAphAusente); // ✅ NOVO
       } catch (error) {
         console.error("Erro ao carregar postos:", error);
       } finally {
@@ -189,6 +195,7 @@ export const TabPostos = () => {
             statusWhitemed={statusMateriaisB[numero]?.whitemed ?? "ok"}
             statusBolsaAph={statusMateriaisB[numero]?.bolsaAph ?? "ok"}
             statusOutros={statusMateriaisB[numero]?.outros ?? "ok"}
+            bolsaAphAusente={bolsaAphAusente[numero] ?? false} // ✅ NOVO
             temAlteracoesPendentes={alteracoesPendentes[numero] ?? false}
             onToggleAtivo={() => handleToggleAtivo(numero)}
             onMaterialClick={(material) =>
