@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronRight, Search } from 'lucide-react';
 import type { GVC } from '../../services/gvcService';
 import { obterCautelaPorGVC } from '../../services/cautelasService';
-import type { Cautela } from '../../types/cautelas';
+import type { Cautela, ItemCautelado, CondicaoItem } from '../../types/cautelas';
 import { obterItensCautelaveis } from '../../services/itensCautelaveisService';
 
 interface TabCautelasAtivasProps {
@@ -14,6 +14,12 @@ interface CautelaInfo {
   gvcId: string;
   cautela: Cautela | null;
   isLoading: boolean;
+}
+
+interface ItemAgrupado {
+  nomeItem: string;
+  itens: ItemCautelado[];
+  quantidade: number;
 }
 
 export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps) => {
@@ -80,41 +86,127 @@ export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps)
     }
   }, [gvcsAtivos]);
 
-  const getItemStatus = (cautela: Cautela | null, nomeItem: string) => {
-    if (!cautela) return 'nao-entregue';
+  // NOVO: Agrupar itens por tipo
+  const agruparItens = (cautela: Cautela | null, nomeItem: string): ItemAgrupado => {
+    if (!cautela) {
+      return { nomeItem, itens: [], quantidade: 0 };
+    }
     
     const itensDoTipo = cautela.itensAtivos.filter(
       item => item.item.toLowerCase() === nomeItem.toLowerCase()
     );
     
-    if (itensDoTipo.length === 0) return 'nao-entregue';
+    // Ordenar por condição (Ruim -> Regular -> Bom)
+    const ordenados = [...itensDoTipo].sort((a, b) => {
+      const ordem: Record<CondicaoItem, number> = { 'Ruim': 0, 'Regular': 1, 'Bom': 2 };
+      return ordem[a.condicao] - ordem[b.condicao];
+    });
     
-    // Se tem múltiplos, retorna a pior condição
-    const temRuim = itensDoTipo.some(i => i.condicao === 'Ruim');
-    const temRegular = itensDoTipo.some(i => i.condicao === 'Regular');
-    
-    if (temRuim) return 'ruim';
-    if (temRegular) return 'regular';
-    return 'bom';
+    return {
+      nomeItem,
+      itens: ordenados,
+      quantidade: ordenados.length,
+    };
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'bom':
+  const getStatusColor = (condicao: CondicaoItem) => {
+    switch (condicao) {
+      case 'Bom':
         return 'bg-green-500';
-      case 'regular':
+      case 'Regular':
         return 'bg-yellow-500';
-      case 'ruim':
+      case 'Ruim':
         return 'bg-red-500';
-      default:
-        return 'bg-gray-300';
     }
   };
 
   const getItemIcon = (item: string) => {
-    // Primeiras letras do item em maiúsculo
+    // Primeiras 2 letras em maiúsculo
     return item.substring(0, 2).toUpperCase();
   };
+
+  // Componente de Cards Empilhados
+  const StackedItemCards = ({ itemAgrupado }: { itemAgrupado: ItemAgrupado }) => {
+    if (itemAgrupado.quantidade === 0) {
+      // Sem itens - mostrar cinza
+      return (
+        <div
+          className="w-7 h-7 rounded bg-gray-300 flex items-center justify-center text-white text-[10px] font-bold shadow-sm border border-gray-400"
+          title={`${itemAgrupado.nomeItem} - Não entregue`}
+        >
+          {getItemIcon(itemAgrupado.nomeItem)}
+        </div>
+      );
+    }
+
+    if (itemAgrupado.quantidade === 1) {
+      // Um item - mostrar normal
+      const item = itemAgrupado.itens[0];
+      const colorClass = getStatusColor(item.condicao);
+      
+      return (
+        <div
+          className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm transition-transform border-1 border-gray-800`}
+          title={`${itemAgrupado.nomeItem} - ${item.condicao}`}
+        >
+          {getItemIcon(itemAgrupado.nomeItem)}
+        </div>
+      );
+    }
+
+    // Múltiplos itens - mostrar empilhados
+    const maxVisible = 3; // Máximo de cards visíveis empilhados
+    const itensVisiveis = itemAgrupado.itens.slice(0, maxVisible);
+    
+    return (
+      <div className="relative group">
+        {/* Cards empilhados */}
+        <div className="relative" style={{ width: '28px', height: '28px' }}>
+          {itensVisiveis.map((item, index) => {
+            const colorClass = getStatusColor(item.condicao);
+            const offset = index * 3; // Deslocamento em pixels
+            const zIndex = itensVisiveis.length - index;
+            
+            return (
+              <div
+                key={index}
+                className={`absolute ${colorClass} rounded flex items-center justify-center text-white text-[10px] font-bold shadow-md border-1 border-gray-800`}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  top: `${offset}px`,
+                  left: `${offset}px`,
+                  zIndex: zIndex,
+                }}
+              >
+                {getItemIcon(itemAgrupado.nomeItem)}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Badge de quantidade */}
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm z-10 border border-gray-800">
+          {itemAgrupado.quantidade}
+        </div>
+
+        {/* Tooltip detalhado no hover */}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20">
+          <div className="bg-gray-900 text-white text-xs rounded-lg shadow-lg p-2 whitespace-nowrap">
+            <p className="font-bold mb-1 capitalize">{itemAgrupado.nomeItem}</p>
+            {itemAgrupado.itens.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 py-0.5">
+                <span className={`w-2 h-2 rounded-full ${getStatusColor(item.condicao)}`} />
+                <span>{item.condicao}</span>
+                {item.tamanho !== '-' && <span className="text-gray-400">({item.tamanho})</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   // Filtrar GVCs pela pesquisa
   const gvcsFiltrados = gvcsAtivos.filter((gvc) => {
@@ -197,28 +289,18 @@ export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps)
                       <td className="px-4 py-4">
                         <span className="font-medium text-gray-900">{gvc.nome}</span>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-6">
                         {isLoadingItens || cautelaInfo?.isLoading ? (
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-3">
                             <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                             <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                             <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                           </div>
                         ) : (
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-3 items-center">
                             {itensCautelaveis.map((item) => {
-                              const status = getItemStatus(cautelaInfo?.cautela || null, item);
-                              const colorClass = getStatusColor(status);
-                              
-                              return (
-                                <div
-                                  key={item}
-                                  className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm hover:scale-110 transition-transform`}
-                                  title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
-                                >
-                                  {getItemIcon(item)}
-                                </div>
-                              );
+                              const itemAgrupado = agruparItens(cautelaInfo?.cautela || null, item);
+                              return <StackedItemCards key={item} itemAgrupado={itemAgrupado} />;
                             })}
                           </div>
                         )}
@@ -260,26 +342,16 @@ export const TabCautelasAtivas = ({ gvcs, onSelectGVC }: TabCautelasAtivasProps)
                       Itens Cautelados
                     </p>
                     {isLoadingItens || cautelaInfo?.isLoading ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-3">
                         <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                         <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                         <div className="w-7 h-7 rounded bg-gray-200 animate-pulse" />
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-3 items-center">
                         {itensCautelaveis.map((item) => {
-                          const status = getItemStatus(cautelaInfo?.cautela || null, item);
-                          const colorClass = getStatusColor(status);
-                          
-                          return (
-                            <div
-                              key={item}
-                              className={`w-7 h-7 rounded ${colorClass} flex items-center justify-center text-white text-[10px] font-bold shadow-sm`}
-                              title={`${item} - ${status === 'nao-entregue' ? 'Não entregue' : status.charAt(0).toUpperCase() + status.slice(1)}`}
-                            >
-                              {getItemIcon(item)}
-                            </div>
-                          );
+                          const itemAgrupado = agruparItens(cautelaInfo?.cautela || null, item);
+                          return <StackedItemCards key={item} itemAgrupado={itemAgrupado} />;
                         })}
                       </div>
                     )}
