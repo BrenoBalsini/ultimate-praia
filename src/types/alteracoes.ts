@@ -19,8 +19,8 @@ export interface Alteracao {
 // ===== ELOGIOS =====
 export interface Elogio {
   id?: string;
-  titulo: string; // NOVO
-  descricao?: string; // Agora opcional
+  titulo: string;
+  descricao?: string; // Opcional
   gvcIds: string[];
   gvcNomes: string[];
   criadoEm?: Timestamp;
@@ -44,8 +44,8 @@ export type PolaridadeConceito = 'Positivo' | 'Negativo';
 
 export interface Conceito {
   id?: string;
-  gvcId: string;
-  gvcNome: string;
+  gvcIds: string[]; // Agora suporta múltiplos GVCs
+  gvcNomes: string[]; // Agora suporta múltiplos GVCs
   conceito: TipoConceito;
   polaridade: PolaridadeConceito;
   descricao: string;

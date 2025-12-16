@@ -214,7 +214,6 @@ export const deletarElogio = async (id: string): Promise<void> => {
 // ===== CONCEITOS =====
 const CONCEITOS_COLLECTION = 'conceitos';
 
-
 export const criarConceito = async (
   data: Omit<Conceito, 'id' | 'criadoEm' | 'criadoPor' | 'inseridoNaTabela'>,
   usuarioEmail?: string
@@ -240,7 +239,6 @@ export const criarConceito = async (
   }
 };
 
-
 export const obterConceitosAtivos = async (): Promise<Conceito[]> => {
   try {
     const q = query(
@@ -259,7 +257,6 @@ export const obterConceitosAtivos = async (): Promise<Conceito[]> => {
     throw error;
   }
 };
-
 
 export const obterHistoricoConceitos = async (): Promise<Conceito[]> => {
   try {
@@ -280,7 +277,6 @@ export const obterHistoricoConceitos = async (): Promise<Conceito[]> => {
   }
 };
 
-
 export const marcarConceitoComoInserido = async (id: string): Promise<void> => {
   try {
     await updateDoc(doc(db, CONCEITOS_COLLECTION, id), {
@@ -291,7 +287,6 @@ export const marcarConceitoComoInserido = async (id: string): Promise<void> => {
     throw error;
   }
 };
-
 
 export const deletarConceito = async (id: string): Promise<void> => {
   try {

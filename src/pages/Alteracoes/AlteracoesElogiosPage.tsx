@@ -234,33 +234,79 @@ export const AlteracoesElogiosPage = () => {
     }
   };
 
+  // Função para renderizar o botão de adicionar correto
+  const renderBotaoAdicionar = () => {
+    if (subAba !== 'ativos') return null;
+
+    const configs = {
+      alteracoes: {
+        onClick: () => setIsModalAlteracaoOpen(true),
+        icon: AlertCircle,
+        label: 'Adicionar Alteração',
+        gradient: 'from-red-600 to-red-700',
+      },
+      elogios: {
+        onClick: () => setIsModalElogioOpen(true),
+        icon: Award,
+        label: 'Novo Elogio',
+        gradient: 'from-green-600 to-green-700',
+      },
+      conceitos: {
+        onClick: () => setIsModalConceitoOpen(true),
+        icon: Target,
+        label: 'Adicionar Conceito',
+        gradient: 'from-blue-600 to-blue-700',
+      },
+    };
+
+    const config = configs[aba];
+    const Icon = config.icon;
+
+    return (
+      <button
+        type="button"
+        onClick={config.onClick}
+        className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r ${config.gradient} text-white text-sm font-semibold hover:shadow-lg transition-all`}
+      >
+        <Icon size={18} />
+        {config.label}
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
 
       <div className="px-6 py-8 max-w-7xl mx-auto">
         <div className="flex flex-col gap-6">
-          {/* Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Alterações e Elogios</h1>
-            <p className="text-gray-600">Gerencie alterações, elogios e conceitos dos guarda-vidas</p>
+          {/* Header com Gradiente */}
+          <div className="bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] rounded-2xl shadow-xl px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Alterações e Elogios</h1>
+                <p className="text-blue-100">Gerencie alterações, elogios e conceitos dos guarda-vidas</p>
+              </div>
+              {renderBotaoAdicionar()}
+            </div>
           </div>
 
           {/* Abas Principais */}
-          <div className="border-b border-gray-200">
-            <div className="flex gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="flex gap-2 p-2">
               <button
                 type="button"
                 onClick={() => {
                   setAba('alteracoes');
                   setSubAba('ativos');
                 }}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all ${
                   aba === 'alteracoes'
-                    ? 'border-red-600 text-red-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
+                <AlertCircle size={18} />
                 Alterações
               </button>
               <button
@@ -269,12 +315,13 @@ export const AlteracoesElogiosPage = () => {
                   setAba('elogios');
                   setSubAba('ativos');
                 }}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all ${
                   aba === 'elogios'
-                    ? 'border-green-600 text-green-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
+                <Award size={18} />
                 Elogios
               </button>
               <button
@@ -283,27 +330,28 @@ export const AlteracoesElogiosPage = () => {
                   setAba('conceitos');
                   setSubAba('ativos');
                 }}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all ${
                   aba === 'conceitos'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
+                <Target size={18} />
                 Conceito
               </button>
             </div>
           </div>
 
           {/* Sub-abas (Ativos / Histórico) */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center justify-center">
+            <div className="inline-flex gap-2 bg-white rounded-xl p-1.5 shadow-sm border border-gray-200">
               <button
                 type="button"
                 onClick={() => setSubAba('ativos')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                   subAba === 'ativos'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 Ativos
@@ -311,56 +359,20 @@ export const AlteracoesElogiosPage = () => {
               <button
                 type="button"
                 onClick={() => setSubAba('historico')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                   subAba === 'historico'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-[#1E3A5F] to-[#2C5282] text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 Histórico
               </button>
             </div>
-
-            {/* Botão Adicionar (apenas em ativos) */}
-            {subAba === 'ativos' && (
-              <div>
-                {aba === 'alteracoes' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsModalAlteracaoOpen(true)}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
-                  >
-                    <AlertCircle size={18} />
-                    Adicionar Alteração
-                  </button>
-                )}
-                {aba === 'elogios' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsModalElogioOpen(true)}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
-                  >
-                    <Award size={18} />
-                    Novo Elogio
-                  </button>
-                )}
-                {aba === 'conceitos' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsModalConceitoOpen(true)}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    <Target size={18} />
-                    Adicionar Conceito
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Conteúdo */}
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
               <div className="mx-auto mb-4 w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
               <p className="text-gray-600">Carregando...</p>
             </div>
